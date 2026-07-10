@@ -24,7 +24,7 @@ function createWindow() {
     backgroundColor: "#07110f",
     icon: getAssetPath("icon.png"),
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
+      preload: path.join(__dirname, "../preload/index.cjs"),
       contextIsolation: true,
       nodeIntegration: false,
     },

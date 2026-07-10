@@ -7,6 +7,14 @@ export default defineConfig({
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          // Electron executes preload scripts as CommonJS, even when the app uses ESM.
+          format: "cjs",
+        },
+      },
+    },
   },
   renderer: {
     plugins: [react()],
