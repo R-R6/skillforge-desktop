@@ -1,0 +1,66 @@
+{
+  "name": "skillforge-desktop",
+  "version": "0.1.0",
+  "description": "AI coding agent Skill management center for Windows.",
+  "author": "R-R6",
+  "main": "out/main/index.js",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
+    "lint": "eslint .",
+    "rebuild:native": "electron-rebuild -f -w better-sqlite3",
+    "package": "npm run build && electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.2",
+    "@types/react": "^19.0.2",
+    "@types/react-dom": "^19.0.2",
+    "@electron/rebuild": "^4.0.1",
+    "@eslint/js": "^9.17.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.0.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.1.0",
+    "eslint": "^9.17.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.16",
+    "globals": "^15.14.0",
+    "node-gyp": "^13.0.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.1",
+    "vite": "^6.0.7"
+  },
+  "build": {
+    "appId": "com.rr6.skillforge",
+    "productName": "SkillForge Desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "out/**/*",
+      "resources/**/*"
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "resources/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}
