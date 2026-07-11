@@ -1,0 +1,30 @@
+# SkillForge Desktop 文档
+
+本目录用于沉淀产品与技术方案，供设计与开发对齐。
+
+## 目录
+
+| 文档 | 说明 |
+|------|------|
+| [theme-system/design-philosophy.md](./theme-system/design-philosophy.md) | **设计宪法** — Dark/Light 双人格、Arctic 完整规范、决策对照表 |
+| [theme-system/vision.md](./theme-system/vision.md) | Theme System 1.0 产品愿景与体系结构 |
+| [theme-system/architecture.md](./theme-system/architecture.md) | 技术架构：Token 分层与 Arctic Token 参考值 |
+| [theme-system/implementation-roadmap.md](./theme-system/implementation-roadmap.md) | 分期路线图 + Arctic 专项验收清单 |
+
+## 核心设计原则（摘要）
+
+> **Light Theme 不是 Dark Theme 的反色。**
+
+- **Graphite Dark** → 深夜 AI 实验室（contrast · glow · calm）
+- **Arctic Light** → 白天设计工作室（border · whitespace · precision）
+- 布局 / 间距 / 排版 / 交互 **永远不变**；主题只换 Token
+- **Warm Orange** 跨主题保留，作为 AI 语义色（Dark `#FF9F68` · Light `#EA7A2F`）
+- Arctic Light **禁止 glow**；用 border + Warm White `#F6F8FB` 制造层级
+
+完整规范见 [design-philosophy.md](./theme-system/design-philosophy.md)。
+
+## 当前状态（2026-07）
+
+- 已实现 **Visual System 2.0**（Graphite 石墨灰 + 交互点缀色）
+- 主题能力仍为 **Dark / Light 二元反色切换**，待升级为 Theme Engine
+- Theme System 方案与 design-philosophy 已写入 `theme-system/` 子目录
