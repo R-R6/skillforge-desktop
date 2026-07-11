@@ -35,6 +35,7 @@ describe("parseThemePreferences", () => {
       density: "compact" as const,
       motion: "reduced" as const,
       enableAnimation: false,
+      activeThemePackId: "builtin:nord",
     };
     const settings = themePreferencesToSettings(prefs);
     expect(parseThemePreferences(settings)).toEqual(prefs);

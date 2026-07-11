@@ -4,7 +4,7 @@ import path from "node:path";
 import { closeDatabase, initializeDatabase } from "./db";
 import { registerIpcHandlers } from "./ipc";
 import { logError, logInfo } from "./logger";
-import { applyWindowBackground, initializeThemeBridge, setMainWindowGetter } from "./theme";
+import { applyWindowBackground, getInitialTitleBarOverlay, initializeThemeBridge, isTitleBarOverlayEnabled, setMainWindowGetter } from "./theme";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -15,15 +15,48 @@ function getAssetPath(fileName: string) {
   return path.join(app.getAppPath(), "resources", fileName);
 }
 
+function configureApplicationMenu() {
+  if (process.platform === "darwin") {
+    Menu.setApplicationMenu(
+      Menu.buildFromTemplate([
+        {
+          label: app.name,
+          submenu: [
+            { role: "about" },
+            { type: "separator" },
+            { role: "quit", label: "退出 SkillForge" },
+          ],
+        },
+        {
+          label: "编辑",
+          submenu: [{ role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+        },
+        {
+          label: "窗口",
+          submenu: [{ role: "minimize" }, { role: "zoom" }, { role: "front" }],
+        },
+      ]),
+    );
+    return;
+  }
+  Menu.setApplicationMenu(null);
+}
+
 function createWindow() {
+  const isMac = process.platform === "darwin";
+  const isWin = process.platform === "win32";
+
   mainWindow = new BrowserWindow({
     width: 1320,
     height: 840,
     minWidth: 1080,
     minHeight: 680,
-    title: "SkillForge Desktop",
+    title: "SkillForge",
     backgroundColor: "#13161c",
     icon: getAssetPath("icon.png"),
+    autoHideMenuBar: true,
+    ...(isMac ? { titleBarStyle: "hiddenInset" as const } : {}),
+    ...(isWin ? { titleBarOverlay: getInitialTitleBarOverlay() } : {}),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),
       contextIsolation: true,
@@ -36,6 +69,13 @@ function createWindow() {
   } else {
     mainWindow.loadFile(path.join(__dirname, "../renderer/index.html"));
   }
+
+  mainWindow.webContents.on("did-finish-load", () => {
+    const classes = [`platform-${process.platform}`];
+    if (isTitleBarOverlayEnabled()) classes.push("platform-win32-overlay");
+    const script = `document.body.classList.add(${classes.map((name) => JSON.stringify(name)).join(", ")})`;
+    mainWindow?.webContents.executeJavaScript(script).catch(() => undefined);
+  });
 
   mainWindow.on("closed", () => {
     mainWindow = null;
@@ -60,18 +100,7 @@ function createTray() {
 }
 
 app.whenReady().then(() => {
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: "SkillForge",
-        submenu: [{ label: "退出", role: "quit" }],
-      },
-      {
-        label: "窗口",
-        submenu: [{ role: "minimize" }, { role: "reload" }],
-      },
-    ]),
-  );
+  configureApplicationMenu();
   initializeDatabase();
   registerIpcHandlers();
   setMainWindowGetter(() => mainWindow);

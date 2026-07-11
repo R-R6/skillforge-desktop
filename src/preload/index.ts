@@ -1,5 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import type { ThemeSelection } from "../shared/theme";
+import type { ThemePack, ThemePackSummary } from "../shared/themePack";
 
 contextBridge.exposeInMainWorld("skillforge", {
   listSkills: (query?: SkillQuery) => ipcRenderer.invoke("skills:list", query) as Promise<SkillSummary[]>,
@@ -37,6 +39,11 @@ contextBridge.exposeInMainWorld("skillforge", {
     ipcRenderer.on("theme:system-changed", handler);
     return () => ipcRenderer.removeListener("theme:system-changed", handler);
   },
+  listThemePacks: () => ipcRenderer.invoke("theme-packs:list") as Promise<ThemePackSummary[]>,
+  getThemePack: (key: string) => ipcRenderer.invoke("theme-packs:get", key) as Promise<ThemePack | null>,
+  importThemePackFile: () => ipcRenderer.invoke("theme-packs:import-file") as Promise<ThemePackSummary | null>,
+  exportThemePackFile: (key: string) => ipcRenderer.invoke("theme-packs:export-file", key) as Promise<FileExportResult | null>,
+  deleteThemePack: (key: string) => ipcRenderer.invoke("theme-packs:delete", key) as Promise<void>,
   getAppInfo: () => ipcRenderer.invoke("settings:info") as Promise<AppInfo>,
   backupDatabase: () => ipcRenderer.invoke("settings:backup") as Promise<FileExportResult | null>,
   exportData: () => ipcRenderer.invoke("settings:export") as Promise<FileExportResult | null>,

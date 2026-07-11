@@ -10,6 +10,7 @@ export interface ThemePreferences {
   density: DensityId;
   motion: MotionPreference;
   enableAnimation: boolean;
+  activeThemePackId: string;
 }
 
 export const DEFAULT_THEME_PREFERENCES: ThemePreferences = {
@@ -18,6 +19,7 @@ export const DEFAULT_THEME_PREFERENCES: ThemePreferences = {
   density: "comfortable",
   motion: "default",
   enableAnimation: true,
+  activeThemePackId: "",
 };
 
 export const THEME_SETTING_KEYS = {
@@ -26,6 +28,7 @@ export const THEME_SETTING_KEYS = {
   density: "density",
   motion: "motion",
   enableAnimation: "enableAnimation",
+  activeThemePackId: "activeThemePackId",
   /** @deprecated migrated to themeSelection */
   legacyTheme: "theme",
 } as const;
@@ -103,6 +106,7 @@ export function parseThemePreferences(settings: Record<string, string>): ThemePr
     density: parseDensity(settings[THEME_SETTING_KEYS.density]),
     motion: parseMotion(settings[THEME_SETTING_KEYS.motion]),
     enableAnimation: parseBool(settings[THEME_SETTING_KEYS.enableAnimation], DEFAULT_THEME_PREFERENCES.enableAnimation),
+    activeThemePackId: settings[THEME_SETTING_KEYS.activeThemePackId]?.trim() ?? "",
   };
 }
 
@@ -113,14 +117,35 @@ export function themePreferencesToSettings(preferences: ThemePreferences): Recor
     [THEME_SETTING_KEYS.density]: preferences.density,
     [THEME_SETTING_KEYS.motion]: preferences.motion,
     [THEME_SETTING_KEYS.enableAnimation]: preferences.enableAnimation ? "on" : "off",
+    [THEME_SETTING_KEYS.activeThemePackId]: preferences.activeThemePackId,
   };
 }
 
-export const THEME_SELECTION_OPTIONS: Array<{ id: ThemeSelection; label: string; description: string }> = [
-  { id: "system", label: "跟随系统", description: "随 Windows / macOS 外观自动切换" },
-  { id: "graphite", label: "Graphite Dark", description: "默认品牌主题 · 深夜 AI 实验室" },
-  { id: "arctic", label: "Arctic Light", description: "明亮精确 · 白天设计工作室" },
-  { id: "midnight", label: "Midnight", description: "极致深色 · OLED 友好" },
+export const THEME_SELECTION_OPTIONS: Array<{ id: ThemeSelection; label: string; description: string; help: string }> = [
+  {
+    id: "system",
+    label: "跟随系统",
+    description: "随 Windows / macOS 外观自动切换",
+    help: "读取操作系统浅色/深色偏好，自动在 Graphite Dark 与 Arctic Light 之间切换，并同步 Electron 原生窗口外观。",
+  },
+  {
+    id: "graphite",
+    label: "Graphite Dark",
+    description: "默认品牌主题 · 深夜 AI 实验室",
+    help: "石墨灰基底 + 柔和层级，品牌色仅点缀交互元素，适合夜间长时间使用。",
+  },
+  {
+    id: "arctic",
+    label: "Arctic Light",
+    description: "明亮精确 · 白天设计工作室",
+    help: "高可读浅色主题，强调干净留白与精确边界，适合白天审阅与演示。",
+  },
+  {
+    id: "midnight",
+    label: "Midnight",
+    description: "极致深色 · OLED 友好",
+    help: "更深、更沉的背景与更高对比，装饰更少，适合 OLED 屏幕与偏好极简深色的用户。",
+  },
 ];
 
 export const THEME_PREVIEW_SWATCHES: Record<Exclude<ThemeSelection, "system">, {
@@ -153,15 +178,15 @@ export const THEME_PREVIEW_SWATCHES: Record<Exclude<ThemeSelection, "system">, {
   },
 };
 
-export const ACCENT_OPTIONS: Array<{ id: AccentId; label: string; swatch: string }> = [
-  { id: "ocean", label: "Ocean Blue", swatch: "#2563eb" },
-  { id: "emerald", label: "Emerald", swatch: "#10b981" },
-  { id: "sunset", label: "Sunset", swatch: "#ea580c" },
-  { id: "violet", label: "Violet", swatch: "#7c3aed" },
-  { id: "rose", label: "Rose", swatch: "#f43f5e" },
+export const ACCENT_OPTIONS: Array<{ id: AccentId; label: string; swatch: string; help: string }> = [
+  { id: "ocean", label: "Ocean Blue", swatch: "#2563eb", help: "默认海洋蓝，稳重通用，适合大多数工作流。" },
+  { id: "emerald", label: "Emerald", swatch: "#10b981", help: "翡翠绿强调色，适合偏好冷静、自然语义的场景。" },
+  { id: "sunset", label: "Sunset", swatch: "#ea580c", help: "日落橙强调色，视觉更活跃，适合需要更强引导的操作区。" },
+  { id: "violet", label: "Violet", swatch: "#7c3aed", help: "紫罗兰强调色，偏创意与探索氛围。" },
+  { id: "rose", label: "Rose", swatch: "#f43f5e", help: "玫瑰红强调色，对比鲜明，适合需要突出警示或关键操作的面板。" },
 ];
 
-export const DENSITY_OPTIONS: Array<{ id: DensityId; label: string }> = [
-  { id: "comfortable", label: "Comfortable" },
-  { id: "compact", label: "Compact" },
+export const DENSITY_OPTIONS: Array<{ id: DensityId; label: string; help: string }> = [
+  { id: "comfortable", label: "Comfortable", help: "默认宽松密度：更大字号、间距与控件高度，阅读压力更低。" },
+  { id: "compact", label: "Compact", help: "紧凑密度：缩小间距与控件尺寸，一屏可展示更多列表与表单字段。" },
 ];

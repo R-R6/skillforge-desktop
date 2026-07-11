@@ -7,6 +7,7 @@ import { importProjectSkill, loadDiscoveredProjectSkills, scanProject } from "./
 import { applyPresetToProject } from "./presets";
 import { logInfo } from "./logger";
 import { applyWindowBackground, getSystemPrefersDark, syncNativeThemeSource } from "./theme";
+import { deleteUserThemePack, exportThemePackJson, getThemePack, importThemePackFromJson, listThemePacks } from "./themePacks";
 import type { ThemeSelection } from "../shared/theme";
 import type { ApplyPresetInput, CreatePresetInput, CreateSkillInput, DeployProjectInput, SkillQuery, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
@@ -69,6 +70,33 @@ export function registerIpcHandlers() {
   ipcMain.handle("theme:sync-native", (_event, themeSelection: ThemeSelection) => {
     syncNativeThemeSource(themeSelection);
     applyWindowBackground();
+  });
+  ipcMain.handle("theme-packs:list", () => listThemePacks());
+  ipcMain.handle("theme-packs:get", (_event, key: string) => getThemePack(key));
+  ipcMain.handle("theme-packs:import-file", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "导入 Theme Pack",
+      properties: ["openFile"],
+      filters: [{ name: "Theme Pack JSON", extensions: ["json"] }],
+    });
+    if (result.canceled || !result.filePaths[0]) return null;
+    const json = fs.readFileSync(result.filePaths[0], "utf8");
+    return importThemePackFromJson(json);
+  });
+  ipcMain.handle("theme-packs:export-file", async (_event, key: string) => {
+    const pack = getThemePack(key);
+    if (!pack) return null;
+    const result = await dialog.showSaveDialog({
+      title: "导出 Theme Pack",
+      defaultPath: path.join(app.getPath("documents"), `${pack.id}.theme.json`),
+      filters: [{ name: "Theme Pack JSON", extensions: ["json"] }],
+    });
+    if (result.canceled || !result.filePath) return null;
+    fs.writeFileSync(result.filePath, exportThemePackJson(key), "utf8");
+    return { filePath: result.filePath, kind: "json" as const };
+  });
+  ipcMain.handle("theme-packs:delete", (_event, key: string) => {
+    deleteUserThemePack(key);
   });
   ipcMain.handle("settings:info", () => ({
     version: app.getVersion(),

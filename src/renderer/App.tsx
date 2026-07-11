@@ -36,6 +36,9 @@ const navTitles: Record<string, string> = {
   settings: "设置",
 };
 
+/** 顶栏「导入 Skill」仅出现在以 Skill 库为核心的工作流页面 */
+const SHOW_IMPORT_SKILL_NAV = new Set(["dashboard", "skill-library"]);
+
 function App() {
   const [activeNav, setActiveNav] = useState("skill-library");
   const [libraryNavigationKey, setLibraryNavigationKey] = useState(NAV_ALL);
@@ -135,7 +138,11 @@ function App() {
             </div>
             <h1>{navTitles[activeNav] ?? "Skill 库"}</h1>
           </div>
-          <button className="primary-button" onClick={handleImportSkill}><Upload size={17} /> 导入 Skill</button>
+          {SHOW_IMPORT_SKILL_NAV.has(activeNav) && (
+            <button className="primary-button" onClick={handleImportSkill}>
+              <Upload size={17} /> 导入 Skill
+            </button>
+          )}
         </header>
 
         {showMarketingSections && (

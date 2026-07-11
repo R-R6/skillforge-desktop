@@ -7,6 +7,7 @@ import {
   type ResolvedThemeId,
   type ThemePreferences,
 } from "../../shared/theme";
+import { resolveThemePackTokens, tokensToStyleBlock, type ThemePack } from "../../shared/themePack";
 
 export type ThemeChangeListener = (state: AppliedThemeState) => void;
 
@@ -26,6 +27,34 @@ function prefersReducedMotion(): boolean {
 
 function shouldReduceMotion(preferences: ThemePreferences): boolean {
   return preferences.motion === "reduced" || !preferences.enableAnimation || prefersReducedMotion();
+}
+
+function applyThemePackOverrides(tokens: Record<string, string>) {
+  let element = document.getElementById("theme-pack-overrides") as HTMLStyleElement | null;
+  if (!element) {
+    element = document.createElement("style");
+    element.id = "theme-pack-overrides";
+    document.head.appendChild(element);
+  }
+  element.textContent = tokensToStyleBlock(tokens);
+}
+
+async function refreshThemePackOverrides(preferences: ThemePreferences, resolvedThemeId: ResolvedThemeId) {
+  if (!preferences.activeThemePackId) {
+    applyThemePackOverrides({});
+    return;
+  }
+
+  try {
+    const pack = await window.skillforge.getThemePack(preferences.activeThemePackId) as ThemePack | null;
+    if (!pack) {
+      applyThemePackOverrides({});
+      return;
+    }
+    applyThemePackOverrides(resolveThemePackTokens(pack, resolvedThemeId));
+  } catch {
+    applyThemePackOverrides({});
+  }
 }
 
 export function getAppliedThemeState(): AppliedThemeState {
@@ -55,6 +84,7 @@ export function applyThemeToDocument(preferences: ThemePreferences, nextSystemPr
 
   const state = getAppliedThemeState();
   listeners.forEach((listener) => listener(state));
+  void refreshThemePackOverrides(preferences, resolvedThemeId);
   return state;
 }
 
@@ -74,17 +104,29 @@ export async function loadAndApplyThemePreferences(): Promise<AppliedThemeState>
     systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
 
-  return applyThemeToDocument(preferences, systemDark);
+  const state = applyThemeToDocument(preferences, systemDark);
+  await refreshThemePackOverrides(preferences, state.resolvedThemeId);
+  return getAppliedThemeState();
 }
 
 export async function saveThemePreferences(preferences: ThemePreferences): Promise<AppliedThemeState> {
   const payload = themePreferencesToSettings(preferences);
   await Promise.all(Object.entries(payload).map(([key, value]) => window.skillforge.setSetting(key, value)));
   await window.skillforge.syncNativeTheme(preferences.themeSelection);
-  return applyThemeToDocument(preferences, systemPrefersDark);
+  const state = applyThemeToDocument(preferences, systemPrefersDark);
+  await refreshThemePackOverrides(preferences, state.resolvedThemeId);
+  return getAppliedThemeState();
 }
 
 export function handleSystemThemeChanged(systemDark: boolean) {
   if (cachedPreferences.themeSelection !== "system") return getAppliedThemeState();
-  return applyThemeToDocument(cachedPreferences, systemDark);
+  const state = applyThemeToDocument(cachedPreferences, systemDark);
+  void refreshThemePackOverrides(cachedPreferences, state.resolvedThemeId);
+  return state;
+}
+
+export async function previewThemePack(preferences: ThemePreferences): Promise<AppliedThemeState> {
+  const state = applyThemeToDocument(preferences, systemPrefersDark);
+  await refreshThemePackOverrides(preferences, state.resolvedThemeId);
+  return getAppliedThemeState();
 }

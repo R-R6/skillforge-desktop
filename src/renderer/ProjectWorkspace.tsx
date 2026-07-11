@@ -315,7 +315,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   return (
     <section className="project-workspace">
       <div className="section-toolbar project-toolbar">
-        <div><h2>项目工作区</h2><span>识别项目已有 Skill 导入到库，或从 Skill 库筛选后部署到项目。</span></div>
+        <div><h2>项目工作区</h2><span>将项目中已有的 Skill 导入并保存到库，或从 Skill 库筛选后部署到项目。</span></div>
         <div className="project-actions"><button className="ghost-button" onClick={() => refresh()}><RotateCw size={15} /> 刷新</button><button className="primary-button" onClick={handleAddProject}><FolderPlus size={16} /> 导入项目</button></div>
       </div>
       {notice && <div className="notice-bar"><Check size={15} /> {notice}</div>}
@@ -361,7 +361,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
 
             <div className="project-workspace-tabs">
               <button className={activeTab === "import" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("import")}>
-                导入到库
+                从项目导入到库
                 <span>{projectSkills.length + globalSkills.length}</span>
               </button>
               <button className={activeTab === "deploy" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("deploy")}>
@@ -384,7 +384,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                       {allVisibleImportSelected ? "取消全选" : "全选"}
                     </button>
                     <button className="scan-import-all" onClick={handleImportSelected} disabled={importingSelected || selectedProjectSkillCount === 0}>
-                      <Download size={13} /> {importingSelected ? "导入中…" : "导入选中到库"}
+                      <Download size={13} /> {importingSelected ? "导入中…" : "将选中项保存到库"}
                     </button>
                   </div>
                 </div>

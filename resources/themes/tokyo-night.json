@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "id": "tokyo-night",
+  "name": "Tokyo Night",
+  "description": "灵感来自 Tokyo Night 编辑器主题，深靛蓝底色搭配柔和蓝色强调。",
+  "author": "SkillForge",
+  "variants": {
+    "dark": {
+      "tokens": {
+        "--bg": "#1a1b26",
+        "--surface": "#24283b",
+        "--surface-sidebar": "#1f2335",
+        "--surface-hover": "#292e42",
+        "--surface-elevated": "#2f3549",
+        "--surface-modal": "#24283b",
+        "--surface-subtle": "#1f2335",
+        "--surface-selected": "#2f3549",
+        "--text-primary": "#c0caf5",
+        "--text-secondary": "#a9b1d6",
+        "--text-description": "#787c99",
+        "--text-disabled": "#565f89",
+        "--cyan": "#7aa2f7",
+        "--blue": "#7aa2f7",
+        "--accent": "#7aa2f7",
+        "--accent-ai": "#ff9e64",
+        "--warm": "#ff9e64",
+        "--line": "rgba(86, 95, 137, 0.35)",
+        "--line-strong": "rgba(122, 162, 247, 0.28)",
+        "--border-brand": "rgba(122, 162, 247, 0.38)",
+        "--border-selected": "rgba(122, 162, 247, 0.48)",
+        "--hover-overlay": "rgba(192, 202, 245, 0.06)",
+        "--ambient-blue": "rgba(122, 162, 247, 0.12)",
+        "--ambient-cyan": "rgba(122, 162, 247, 0.08)",
+        "--brand-gradient": "linear-gradient(135deg, #7aa2f7 0%, #bb9af7 100%)"
+      }
+    }
+  }
+}

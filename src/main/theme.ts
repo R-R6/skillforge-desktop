@@ -3,9 +3,44 @@ import {
   getWindowBackgroundColor,
   parseThemePreferences,
   resolveThemeId,
+  type ResolvedThemeId,
   type ThemeSelection,
 } from "../shared/theme";
 import { getSettings } from "./db";
+
+let titleBarOverlayEnabled = false;
+
+function tryApplyTitleBarOverlay(window: BrowserWindow, resolvedThemeId: ResolvedThemeId) {
+  if (process.platform !== "win32") return;
+  try {
+    window.setTitleBarOverlay({
+      color: getWindowBackgroundColor(resolvedThemeId),
+      symbolColor: getTitleBarSymbolColor(resolvedThemeId),
+      height: TITLE_BAR_HEIGHT,
+    });
+    titleBarOverlayEnabled = true;
+  } catch {
+    titleBarOverlayEnabled = false;
+  }
+}
+
+export function isTitleBarOverlayEnabled() {
+  return titleBarOverlayEnabled;
+}
+
+const TITLE_BAR_HEIGHT = 36;
+
+function getTitleBarSymbolColor(resolvedThemeId: ResolvedThemeId): string {
+  return resolvedThemeId === "arctic-light" ? "#475569" : "#a9b1d6";
+}
+
+export function getInitialTitleBarOverlay() {
+  return {
+    color: getWindowBackgroundColor("graphite-dark"),
+    symbolColor: getTitleBarSymbolColor("graphite-dark"),
+    height: TITLE_BAR_HEIGHT,
+  };
+}
 
 let mainWindowGetter: () => BrowserWindow | null = () => null;
 
@@ -33,8 +68,10 @@ export function applyWindowBackground() {
   const preferences = parseThemePreferences(getSettings());
   const resolvedThemeId = resolveThemeId(preferences.themeSelection, nativeTheme.shouldUseDarkColors);
   const window = mainWindowGetter();
+  const backgroundColor = getWindowBackgroundColor(resolvedThemeId);
   if (window) {
-    window.setBackgroundColor(getWindowBackgroundColor(resolvedThemeId));
+    window.setBackgroundColor(backgroundColor);
+    tryApplyTitleBarOverlay(window, resolvedThemeId);
   }
 }
 
