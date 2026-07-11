@@ -28,8 +28,34 @@ export interface SkillNavigationSnapshot {
 }
 
 export const NAV_ALL = "全部";
+export const NAV_BUILTIN_ALL = "builtin:全部";
 export const NAV_EXTERNAL_ALL = "ext:全部";
 export const NAV_PACK_BUILTIN = "ext:pack:builtin";
+
+export type SkillSidebarScope = "all" | "builtin" | "collected";
+
+export const COLLECTED_KIND_GROUPS: { kind: SkillSourceKind; label: string; hint: string }[] = [
+  { kind: "import", label: "项目收录", hint: "项目管理中扫描后保存到库" },
+  { kind: "github", label: "GitHub 导入", hint: "从公开仓库拉取 Skill" },
+  { kind: "local", label: "本地导入", hint: "手动选择目录或文件" },
+  { kind: "pack", label: "精选合集", hint: "SkillForge 打包精选" },
+];
+
+export function getSidebarScope(navigationKey: string): SkillSidebarScope {
+  if (navigationKey === NAV_ALL) return "all";
+  if (navigationKey === NAV_BUILTIN_ALL || navigationKey.startsWith("cat:")) return "builtin";
+  return "collected";
+}
+
+export function groupExternalSourcesByKind(sources: SkillSourceGroup[]): Map<SkillSourceKind, SkillSourceGroup[]> {
+  const groups = new Map<SkillSourceKind, SkillSourceGroup[]>();
+  for (const source of sources) {
+    const bucket = groups.get(source.kind) ?? [];
+    bucket.push(source);
+    groups.set(source.kind, bucket);
+  }
+  return groups;
+}
 
 export function isExternalSkill(skill: SkillRecordRef): boolean {
   return skill.sourceType === "external"
@@ -129,7 +155,7 @@ export function getSourceGroup(skill: SkillRecordRef): SkillSourceGroup {
     return {
       id: suffix ? `ext:import:${skill.category}` : "ext:import:root",
       label: suffix ? `项目导入 / ${suffix}` : "项目扫描导入",
-      description: "从项目工作区扫描导入",
+      description: "项目管理 · 收录到库",
       kind: "import",
       count: 0,
     };
@@ -150,6 +176,7 @@ export function getNavigationCategoryKey(category: string): string {
 export function matchesNavigationKey(skill: SkillRecordRef, navigationKey?: string): boolean {
   const key = navigationKey?.trim() || NAV_ALL;
   if (key === NAV_ALL) return true;
+  if (key === NAV_BUILTIN_ALL) return isBuiltinDepartmentSkill(skill);
   if (key === NAV_EXTERNAL_ALL) return isExternalSkill(skill);
   if (key === NAV_PACK_BUILTIN) {
     return skill.category === "外部 Skill" && skill.sourceType !== "external";
@@ -223,10 +250,11 @@ export function getSkillSourceLabel(skill: SkillRecordRef): string {
 
 export function getNavigationBreadcrumbLabel(navigationKey: string, snapshot?: SkillNavigationSnapshot): string {
   if (navigationKey === NAV_ALL) return "";
-  if (navigationKey === NAV_EXTERNAL_ALL) return "外部 Skill";
+  if (navigationKey === NAV_BUILTIN_ALL) return "内置技能";
+  if (navigationKey === NAV_EXTERNAL_ALL) return "收录到库";
   if (navigationKey.startsWith("cat:")) return navigationKey.slice(4);
   const source = snapshot?.externalSources.find((group) => group.id === navigationKey);
-  if (source) return `外部 Skill / ${source.label}`;
-  if (navigationKey === NAV_PACK_BUILTIN) return "外部 Skill / SkillForge 精选合集";
-  return "外部 Skill";
+  if (source) return `收录到库 / ${source.label}`;
+  if (navigationKey === NAV_PACK_BUILTIN) return "收录到库 / SkillForge 精选合集";
+  return "收录到库";
 }

@@ -203,8 +203,6 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
   }
 
   const totalSkillCount = navigation?.totalCount ?? 0;
-  const builtinCategoryCount = navigation?.builtinCategories.length ?? 0;
-  const externalSourceCount = navigation?.externalSources.length ?? 0;
 
   return (
     <section className="library-section">
@@ -214,7 +212,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
           <span>
             {loading
               ? "正在读取…"
-              : `${skills.length} 个结果 · 共 ${totalSkillCount} 个 Skill · ${builtinCategoryCount} 个内置分类 · ${externalSourceCount} 个外部来源`}
+              : `${skills.length} 个结果 · 共 ${totalSkillCount} 个 Skill · 内置 ${(navigation?.totalCount ?? 0) - (navigation?.externalTotal ?? 0)} · 收录 ${navigation?.externalTotal ?? 0}`}
           </span>
         </div>
         <label className="search-box">
@@ -275,6 +273,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
           navigation={navigation ?? { totalCount: 0, builtinCategories: [], externalTotal: 0, externalSources: [] }}
           activeNavigationKey={activeNavigationKey}
           onSelectNavigation={handleNavigationSelect}
+          onOpenProjects={() => onOpenProjects?.([])}
         />
 
         <div className="skill-list-panel">
@@ -376,7 +375,7 @@ function SkillDetail({ skill, onRefreshExternal, onOpenPrompt, onToggleEnabled, 
       <div className="detail-block">
         <span className="detail-label">类型</span>
         <div className="deploy-line">
-          <span className="status-dot" /> {skill.sourceType === "external" ? "外部 Skill，可从来源刷新" : "内置 Skill"}
+          <span className="status-dot" /> {skill.sourceType === "external" ? "收录到库，可从来源刷新" : "内置 Skill"}
         </div>
       </div>
       <div className="detail-actions-stack">
