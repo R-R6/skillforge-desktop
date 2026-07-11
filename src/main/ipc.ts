@@ -48,7 +48,7 @@ export function registerIpcHandlers() {
     });
     if (result.canceled || !result.filePaths[0]) return null;
     const project = addProject(result.filePaths[0]);
-    return scanProject(project.id).then((scanResult) => scanResult.project);
+    return scanProject(project.id).project;
   });
   ipcMain.handle("projects:deploy", (_event, input: DeployProjectInput) => deployProject(input));
   ipcMain.handle("projects:clear-skills", (_event, projectId: string) => clearProjectSkills(projectId));

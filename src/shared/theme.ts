@@ -123,6 +123,36 @@ export const THEME_SELECTION_OPTIONS: Array<{ id: ThemeSelection; label: string;
   { id: "midnight", label: "Midnight", description: "极致深色 · OLED 友好" },
 ];
 
+export const THEME_PREVIEW_SWATCHES: Record<Exclude<ThemeSelection, "system">, {
+  bg: string;
+  sidebar: string;
+  card: string;
+  accent: string;
+  ai: string;
+}> = {
+  graphite: {
+    bg: "#13161c",
+    sidebar: "#1a1d24",
+    card: "#20242c",
+    accent: "#38bdf8",
+    ai: "#ff9f68",
+  },
+  arctic: {
+    bg: "#f6f8fb",
+    sidebar: "#eff2f7",
+    card: "#ffffff",
+    accent: "#2563eb",
+    ai: "#ea7a2f",
+  },
+  midnight: {
+    bg: "#0b0c0e",
+    sidebar: "#121316",
+    card: "#16181d",
+    accent: "#38bdf8",
+    ai: "#ff9f68",
+  },
+};
+
 export const ACCENT_OPTIONS: Array<{ id: AccentId; label: string; swatch: string }> = [
   { id: "ocean", label: "Ocean Blue", swatch: "#2563eb" },
   { id: "emerald", label: "Emerald", swatch: "#10b981" },

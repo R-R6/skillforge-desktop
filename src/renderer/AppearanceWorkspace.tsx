@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Check, Palette, Save } from "lucide-react";
+import { Check, Monitor, Palette, Save } from "lucide-react";
 import {
   ACCENT_OPTIONS,
   DENSITY_OPTIONS,
   DEFAULT_THEME_PREFERENCES,
+  THEME_PREVIEW_SWATCHES,
   THEME_SELECTION_OPTIONS,
   parseThemePreferences,
   type AccentId,
@@ -12,6 +13,38 @@ import {
   type ThemeSelection,
 } from "../shared/theme";
 import { applyThemeToDocument, saveThemePreferences } from "./theme/theme-manager";
+
+function ThemePreviewMock({ selection }: { selection: ThemeSelection }) {
+  if (selection === "system") {
+    return (
+      <div className="theme-preview-mock theme-preview-mock-system" aria-hidden="true">
+        <div className="theme-preview-system-half theme-preview-system-dark" />
+        <div className="theme-preview-system-half theme-preview-system-light" />
+        <Monitor size={14} className="theme-preview-system-icon" />
+      </div>
+    );
+  }
+
+  const swatch = THEME_PREVIEW_SWATCHES[selection];
+  return (
+    <div className="theme-preview-mock" style={{ background: swatch.bg }} aria-hidden="true">
+      <div className="theme-preview-sidebar" style={{ background: swatch.sidebar }} />
+      <div className="theme-preview-main">
+        <div
+          className="theme-preview-card"
+          style={{
+            background: swatch.card,
+            borderColor: selection === "arctic" ? "#e5eaf2" : "rgba(148,163,184,0.12)",
+          }}
+        />
+        <div className="theme-preview-dots">
+          <span style={{ background: swatch.accent }} />
+          <span style={{ background: swatch.ai }} />
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function AppearanceWorkspace() {
   const [preferences, setPreferences] = useState<ThemePreferences>(DEFAULT_THEME_PREFERENCES);
@@ -23,10 +56,6 @@ export default function AppearanceWorkspace() {
       .then((settings) => setPreferences(parseThemePreferences(settings)))
       .catch(() => setPreferences(DEFAULT_THEME_PREFERENCES));
   }, []);
-
-  function updatePreferences(patch: Partial<ThemePreferences>) {
-    setPreferences((current) => ({ ...current, ...patch }));
-  }
 
   async function save() {
     setSaving(true);
@@ -66,16 +95,16 @@ export default function AppearanceWorkspace() {
             <strong>主题</strong>
             <span>Dark 与 Light 是两种人格，不是简单反色。</span>
           </div>
-          <div className="appearance-option-list">
+          <div className="appearance-theme-grid">
             {THEME_SELECTION_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 type="button"
-                className={preferences.themeSelection === option.id ? "appearance-option selected" : "appearance-option"}
+                className={preferences.themeSelection === option.id ? "appearance-theme-card selected" : "appearance-theme-card"}
                 onClick={() => preview({ ...preferences, themeSelection: option.id as ThemeSelection })}
               >
-                <input type="radio" readOnly checked={preferences.themeSelection === option.id} />
-                <span className="appearance-option-copy">
+                <ThemePreviewMock selection={option.id} />
+                <span className="appearance-theme-card-copy">
                   <strong>{option.label}</strong>
                   <small>{option.description}</small>
                 </span>
