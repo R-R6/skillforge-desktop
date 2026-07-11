@@ -7,6 +7,7 @@ import {
   Search,
   Tags,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import type { CreateSkillInput, SkillNavigationSnapshot, SkillSummary } from "../shared/types";
@@ -37,7 +38,14 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
   const [skillEditorOpen, setSkillEditorOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<SkillSummary | null>(null);
   const [gitImportOpen, setGitImportOpen] = useState(false);
+  const [searchShortcutLabel, setSearchShortcutLabel] = useState("Ctrl+K");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    window.skillforge.getAppInfo()
+      .then((info) => setSearchShortcutLabel(info.platform === "darwin" ? "⌘K" : "Ctrl+K"))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +131,14 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
     setSelectedSkill(updated);
   }
 
+  async function handleImportSkillFile() {
+    const imported = await window.skillforge.importSkillFile();
+    if (!imported) return;
+    setActiveNavigationKey(NAV_ALL);
+    setSelectedSkill(imported);
+    onLibraryChanged?.();
+  }
+
   async function handleImportSkillDirectory() {
     const imported = await window.skillforge.importSkillsFromDirectory();
     if (imported.length === 0) return;
@@ -152,7 +168,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
   }
 
   async function handleDeleteSkill(skill: SkillSummary) {
-    if (!window.confirm(`确认删除“${skill.name}”吗？源文件不会被删除。`)) return;
+    if (!window.confirm(`确认从 Skill 库移除“${skill.name}”吗？磁盘上的来源文件不会被删除。`)) return;
     try {
       await window.skillforge.deleteSkill(skill.id);
       setSkills((current) => current.filter((item) => item.id !== skill.id));
@@ -194,11 +210,11 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
     <section className="library-section">
       <div className="section-toolbar">
         <div>
-          <h2>我的 Skill</h2>
+          <h2>Skill 库</h2>
           <span>
             {loading
               ? "正在读取…"
-              : `${skills.length} 个结果 · 共 ${totalSkillCount} 个技能 · ${builtinCategoryCount} 个内置分类 · ${externalSourceCount} 个外部来源`}
+              : `${skills.length} 个结果 · 共 ${totalSkillCount} 个 Skill · ${builtinCategoryCount} 个内置分类 · ${externalSourceCount} 个外部来源`}
           </span>
         </div>
         <label className="search-box">
@@ -209,7 +225,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
             onChange={(event) => setSearch(event.target.value)}
             placeholder="@ 搜索名称、描述或分类"
           />
-          <kbd>⌘ K</kbd>
+          <kbd>{searchShortcutLabel}</kbd>
         </label>
         <button
           className={bulkMode ? "ghost-button bulk-mode-active" : "ghost-button"}
@@ -219,6 +235,9 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
         </button>
         <button className="primary-button compact-button" onClick={() => { setEditingSkill(null); setSkillEditorOpen(true); }}>
           <Plus size={15} /> 新建 Skill
+        </button>
+        <button className="ghost-button" onClick={handleImportSkillFile}>
+          <Upload size={15} /> 导入 Skill 文件
         </button>
         <button className="ghost-button" onClick={handleImportSkillDirectory}>
           <FolderOpen size={15} /> 导入目录
@@ -246,7 +265,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
               setBulkSelectedIds([]);
             }}
           >
-            带到项目
+            前往项目部署
           </button>
         </div>
       )}
@@ -298,7 +317,7 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
           />
         ) : (
           <aside className="detail-panel detail-panel-empty">
-            <span className="eyebrow">SKILL DETAIL</span>
+            <span className="eyebrow">Skill 详情</span>
             <h2>选择一个 Skill</h2>
             <p>从列表中点击 Skill，查看详情、管理标签并预览 Prompt。</p>
           </aside>
@@ -327,7 +346,7 @@ function SkillDetail({ skill, onRefreshExternal, onOpenPrompt, onToggleEnabled, 
       <div className="detail-heading">
         <div className="detail-symbol">✦</div>
         <div>
-          <span className="eyebrow">SKILL DETAIL</span>
+          <span className="eyebrow">Skill 详情</span>
           <h2>{skill.name}</h2>
         </div>
       </div>
@@ -367,7 +386,7 @@ function SkillDetail({ skill, onRefreshExternal, onOpenPrompt, onToggleEnabled, 
         </button>
         {skill.sourceType === "external" && (
           <button className="outline-button secondary" onClick={() => onRefreshExternal(skill.id)} disabled={syncing}>
-            {syncing ? "同步中…" : "从来源同步最新内容"} <ChevronRight size={15} />
+            {syncing ? "刷新中…" : "从来源刷新内容"} <ChevronRight size={15} />
           </button>
         )}
       </div>
@@ -391,7 +410,7 @@ function SkillTagEditor({ skill, onSave, onEdit, onDelete }: { skill: SkillSumma
   return (
     <section className="tag-editor-panel">
       <div>
-        <span className="eyebrow">SKILL TAGS</span>
+        <span className="eyebrow">Skill 标签</span>
         <h2>标签管理</h2>
         <p>为「{skill.name}」添加标签，搜索时也会匹配标签。</p>
         <div className="tag-management-actions">
@@ -414,7 +433,7 @@ function PromptDialog({ skill, onClose }: { skill: SkillSummary; onClose: () => 
       <section className="prompt-dialog" role="dialog" aria-modal="true" aria-labelledby="prompt-title">
         <header className="prompt-dialog-header">
           <div>
-            <span className="eyebrow">SKILL PROMPT</span>
+            <span className="eyebrow">Skill 内容</span>
             <h2 id="prompt-title">{skill.name}</h2>
           </div>
           <button className="prompt-close" onClick={onClose} aria-label="关闭 Prompt 预览"><X size={17} /></button>

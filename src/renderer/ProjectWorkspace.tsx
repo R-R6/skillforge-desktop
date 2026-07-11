@@ -160,6 +160,10 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   }, [activeTab, deploySkillGroups, deployGroupsTouched]);
 
   const selectedProjectSkillCount = useMemo(() => selectedProjectSkillIds.length, [selectedProjectSkillIds]);
+  const pendingImportCount = useMemo(
+    () => [...projectSkills, ...globalSkills].filter((item) => !importedSkillIds.includes(item.id)).length,
+    [projectSkills, globalSkills, importedSkillIds],
+  );
   const allVisibleImportSelected = useMemo(
     () => visibleImportSkillIds.length > 0 && visibleImportSkillIds.every((id) => selectedProjectSkillIds.includes(id)),
     [visibleImportSkillIds, selectedProjectSkillIds],
@@ -175,7 +179,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     setProjects((current) => [project, ...current.filter((item) => item.id !== project.id)]);
     setSelectedProject(project);
     setActiveTab("import");
-    setNotice(`已导入项目：${project.name}，识别到 ${project.discoveredSkillCount} 个 Skill`);
+    setNotice(`已添加项目：${project.name}，识别到 ${project.discoveredSkillCount} 个 Skill`);
   }
 
   async function handleDeploy() {
@@ -205,18 +209,18 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   }
 
   async function handleClearBindings() {
-    if (!selectedProject || !window.confirm(`确认清空“${selectedProject.name}”的 Skill 绑定吗？已手动修改的文件会保留。`)) return;
+    if (!selectedProject || !window.confirm(`确认清空“${selectedProject.name}”的已部署 Skill 吗？已手动修改的文件会保留。`)) return;
     const result = await window.skillforge.clearProjectSkills(selectedProject.id);
     setSelectedProject(result.project);
     setDeploySkillIds([]);
-    setNotice(`已清空项目绑定，删除 ${result.removedFiles.length} 个文件，保留 ${result.preservedFiles.length} 个手动修改文件`);
+    setNotice(`已清空部署文件，删除 ${result.removedFiles.length} 个，保留 ${result.preservedFiles.length} 个手动修改文件`);
   }
 
   async function handleImportSelected() {
     if (!selectedProject || importingSelected) return;
     const candidates = [...projectSkills, ...globalSkills].filter((item) => selectedProjectSkillIds.includes(item.id) && !importedSkillIds.includes(item.id));
     if (candidates.length === 0) {
-      setNotice("请先勾选尚未导入到库的项目 Skill");
+      setNotice("请先勾选尚未收录到库的项目 Skill");
       return;
     }
     setImportingSelected(true);
@@ -233,7 +237,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     });
     setImportedSkillIds((current) => [...new Set([...current, ...imported.map((result) => result.item.id)])]);
     const failedCount = results.length - imported.length;
-    setNotice(`已导入 ${imported.length} 个 Skill 到库${failedCount > 0 ? `，失败 ${failedCount} 个` : ""}`);
+    setNotice(`已将 ${imported.length} 个 Skill 保存到库${failedCount > 0 ? `，失败 ${failedCount} 个` : ""}`);
     setImportingSelected(false);
   }
 
@@ -315,14 +319,14 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   return (
     <section className="project-workspace">
       <div className="section-toolbar project-toolbar">
-        <div><h2>项目工作区</h2><span>将项目中已有的 Skill 导入并保存到库，或从 Skill 库筛选后部署到项目。</span></div>
-        <div className="project-actions"><button className="ghost-button" onClick={() => refresh()}><RotateCw size={15} /> 刷新</button><button className="primary-button" onClick={handleAddProject}><FolderPlus size={16} /> 导入项目</button></div>
+        <div><h2>项目工作区</h2><span>将项目中已有的 Skill 收录保存到库，或从 Skill 库筛选后部署到项目。</span></div>
+        <div className="project-actions"><button className="ghost-button" onClick={() => refresh()}><RotateCw size={15} /> 刷新</button><button className="primary-button" onClick={handleAddProject}><FolderPlus size={16} /> 添加项目</button></div>
       </div>
       {notice && <div className="notice-bar"><Check size={15} /> {notice}</div>}
       <div className="project-layout">
         <div className="project-list">
-          <div className="panel-title"><FolderKanban size={16} /> 已导入项目 <span>{projects.length}</span></div>
-          {loading ? <div className="panel-empty">读取项目中…</div> : projects.length === 0 ? <div className="panel-empty">还没有导入项目。<br />先选择一个本地项目文件夹。</div> : projects.map((project) => (
+          <div className="panel-title"><FolderKanban size={16} /> 已添加项目 <span>{projects.length}</span></div>
+          {loading ? <div className="panel-empty">读取项目中…</div> : projects.length === 0 ? <div className="panel-empty">还没有添加项目。<br />先选择一个本地项目文件夹。</div> : projects.map((project) => (
             <button key={project.id} className={selectedProject?.id === project.id ? "project-item selected" : "project-item"} onClick={() => setSelectedProject(project)}>
               <div className="project-item-icon">⌂</div>
               <div className="project-item-copy">
@@ -335,21 +339,22 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
           ))}
         </div>
         <div className="project-detail">
-          {!selectedProject ? <div className="project-placeholder"><FolderKanban size={34} /><h3>选择一个项目开始</h3><p>导入本地项目后，会自动识别其中已有的 Skill，并支持导入到 Skill 库。</p></div> : <>
+          {!selectedProject ? <div className="project-placeholder"><FolderKanban size={34} /><h3>选择一个项目开始</h3><p>添加本地项目后，会自动识别其中已有的 Skill，并支持从项目收录到 Skill 库。</p></div> : <>
             <div className="project-detail-heading">
               <div>
-                <span className="eyebrow">PROJECT WORKSPACE</span>
+                <span className="eyebrow">项目工作区</span>
                 <h2>{selectedProject.name}</h2>
                 <code>{selectedProject.path}</code>
                 <div className="project-stat-row">
                   <span>项目 Skill <strong>{projectSkills.length}</strong></span>
-                  <span>待导入 <strong>{selectedProjectSkillCount}</strong></span>
-                  <span>待部署 <strong>{deploySkillIds.length}</strong></span>
+                  <span>待收录 <strong>{pendingImportCount}</strong></span>
+                  <span>已选收录 <strong>{selectedProjectSkillCount}</strong></span>
+                  <span>已选部署 <strong>{deploySkillIds.length}</strong></span>
                 </div>
               </div>
               <div className="project-detail-actions">
                 <button className="ghost-button" onClick={handleScan} disabled={scanning}><RotateCw size={15} /> {scanning ? "扫描中…" : "重新扫描"}</button>
-                <button className="ghost-button danger-ghost" onClick={handleClearBindings}>清空绑定</button>
+                <button className="ghost-button danger-ghost" onClick={handleClearBindings}>清空已部署</button>
                 <button className="deploy-button" onClick={handleDeploy}><Rocket size={16} /> 部署到项目</button>
               </div>
             </div>
@@ -361,8 +366,8 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
 
             <div className="project-workspace-tabs">
               <button className={activeTab === "import" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("import")}>
-                从项目导入到库
-                <span>{projectSkills.length + globalSkills.length}</span>
+                从项目收录到库
+                <span>{pendingImportCount}</span>
               </button>
               <button className={activeTab === "deploy" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("deploy")}>
                 从 Skill 库部署
@@ -384,7 +389,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                       {allVisibleImportSelected ? "取消全选" : "全选"}
                     </button>
                     <button className="scan-import-all" onClick={handleImportSelected} disabled={importingSelected || selectedProjectSkillCount === 0}>
-                      <Download size={13} /> {importingSelected ? "导入中…" : "将选中项保存到库"}
+                      <Download size={13} /> {importingSelected ? "保存中…" : "将选中项保存到库"}
                     </button>
                   </div>
                 </div>

@@ -14,7 +14,7 @@ export const APPEARANCE_OPTION_HELP = {
   exportPackItem: "导出该 Theme Pack 的 JSON 文件。",
   deletePackItem: "删除用户导入的 Theme Pack 文件；内置主题不可删除。",
   enableAnimation: "开启 Hover 过渡、选中光晕、卡片微动效与环境呼吸动画。关闭后界面切换更干脆。",
-  reduceMotion: "强制减少动态效果，优先级高于系统 prefers-reduced-motion 设置。",
+  reduceMotion: "强制减少动态效果，优先级高于系统「减少动态效果」无障碍设置。",
   previewSurface: "表面层 Token（--surface），用于卡片、面板等容器背景。",
   previewPrimary: "主操作按钮使用的品牌渐变（--brand-gradient）。",
   previewAi: "AI 相关状态使用的暖色语义 Token（--accent-ai），如运行中提示。",

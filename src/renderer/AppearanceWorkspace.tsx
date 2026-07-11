@@ -368,7 +368,7 @@ export default function AppearanceWorkspace() {
           >
             <span>
               <strong>降低动态效果</strong>
-              <small>优先于系统 prefers-reduced-motion</small>
+              <small>优先于系统「减少动态效果」设置</small>
             </span>
             <input
               type="checkbox"
@@ -390,9 +390,9 @@ export default function AppearanceWorkspace() {
             <span>当前 Token 下的按钮与 AI 语义色。</span>
           </div>
           <div className="appearance-preview-strip">
-            <span className="appearance-preview-chip" data-tip={APPEARANCE_OPTION_HELP.previewSurface} data-tip-position="top">Surface</span>
-            <span className="appearance-preview-chip accent" data-tip={APPEARANCE_OPTION_HELP.previewPrimary} data-tip-position="top">Primary</span>
-            <span className="appearance-preview-chip ai" data-tip={APPEARANCE_OPTION_HELP.previewAi} data-tip-position="top">AI Running</span>
+            <span className="appearance-preview-chip" data-tip={APPEARANCE_OPTION_HELP.previewSurface} data-tip-position="top">表面色</span>
+            <span className="appearance-preview-chip accent" data-tip={APPEARANCE_OPTION_HELP.previewPrimary} data-tip-position="top">主按钮</span>
+            <span className="appearance-preview-chip ai" data-tip={APPEARANCE_OPTION_HELP.previewAi} data-tip-position="top">AI 运行态</span>
           </div>
         </section>
       </div>

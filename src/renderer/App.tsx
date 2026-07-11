@@ -28,10 +28,10 @@ const agents = ["Codex", "Cursor", "Claude Code", "Hermes"];
 
 const navTitles: Record<string, string> = {
   dashboard: "概览",
-  "skill-library": "技能库",
+  "skill-library": "Skill 库",
   projects: "项目管理",
-  presets: "Preset 预设",
-  sync: "工具同步",
+  presets: "预设",
+  sync: "部署状态",
   appearance: "外观",
   settings: "设置",
 };
@@ -106,19 +106,19 @@ function App() {
           <NavItem icon={<LayoutDashboard size={17} />} label="概览" active={activeNav === "dashboard"} onClick={() => setActiveNav("dashboard")} />
           <NavItem icon={<Library size={17} />} label="Skill 库" active={activeNav === "skill-library"} onClick={() => setActiveNav("skill-library")} />
           <NavItem icon={<FolderKanban size={17} />} label="项目管理" active={activeNav === "projects"} onClick={() => setActiveNav("projects")} />
-          <NavItem icon={<Tags size={17} />} label="Preset 预设" active={activeNav === "presets"} onClick={() => setActiveNav("presets")} />
+          <NavItem icon={<Tags size={17} />} label="预设" active={activeNav === "presets"} onClick={() => setActiveNav("presets")} />
         </nav>
 
         <div className="sidebar-label sidebar-label-spaced">配置</div>
         <nav className="nav-list">
-          <NavItem icon={<Wrench size={17} />} label="工具同步" active={activeNav === "sync"} onClick={() => setActiveNav("sync")} />
+          <NavItem icon={<Wrench size={17} />} label="部署状态" active={activeNav === "sync"} onClick={() => setActiveNav("sync")} />
           <NavItem icon={<Palette size={17} />} label="外观" active={activeNav === "appearance"} onClick={() => setActiveNav("appearance")} />
           <NavItem icon={<Settings size={17} />} label="设置" active={activeNav === "settings"} onClick={() => setActiveNav("settings")} />
         </nav>
 
         <div className="sidebar-footer">
           <div className="sync-status"><span className="status-dot" /> 本地工作区已就绪</div>
-          <div className="version">v0.1.0 · Electron</div>
+          <div className="version">v0.1.0</div>
         </div>
       </aside>
 
@@ -140,7 +140,7 @@ function App() {
           </div>
           {SHOW_IMPORT_SKILL_NAV.has(activeNav) && (
             <button className="primary-button" onClick={handleImportSkill}>
-              <Upload size={17} /> 导入 Skill
+              <Upload size={17} /> 导入 Skill 文件
             </button>
           )}
         </header>
@@ -151,7 +151,7 @@ function App() {
               <div className="hero-copy">
                 <div className="eyebrow"><Sparkles size={14} /> AI 编程能力工作台</div>
                 <h2>把专业能力，装进每一个编码 Agent。</h2>
-                <p>集中管理 Skill，再按项目同步到 Codex、Cursor、Claude Code 和 Hermes。</p>
+                <p>集中管理 Skill，再将选中的能力部署到具体项目与编码 Agent。</p>
               </div>
               <div className="agent-stack">
                 {agents.map((agent) => <span key={agent} className="agent-pill"><Bot size={14} /> {agent}</span>)}
@@ -161,9 +161,9 @@ function App() {
             <section className="stats-grid">
               <StatCard label="Skill 总数" value={totalSkillCount} detail="已载入本地库" icon={<Library size={18} />} />
               <StatCard label="支持工具" value="4" detail="Codex · Cursor · Claude · Hermes" icon={<Bot size={18} />} />
-              <StatCard label="已管理项目" value={projectCount} detail="可绑定并部署 Skill" icon={<FolderKanban size={18} />} />
-              <StatCard label="Preset 预设" value={presetCount} detail="可一键应用到项目" icon={<Tags size={18} />} />
-              <StatCard label="同步状态" value="就绪" detail="SQLite 本地数据库" icon={<Check size={18} />} />
+              <StatCard label="已管理项目" value={projectCount} detail="可部署 Skill 到 Agent" icon={<FolderKanban size={18} />} />
+              <StatCard label="预设" value={presetCount} detail="可一键部署到项目" icon={<Tags size={18} />} />
+              <StatCard label="本地数据库" value="就绪" detail="Skill 与预设数据已载入" icon={<Check size={18} />} />
             </section>
           </>
         )}
