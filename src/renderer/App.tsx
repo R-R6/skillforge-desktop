@@ -6,12 +6,14 @@ import {
   FolderKanban,
   LayoutDashboard,
   Library,
+  Palette,
   Settings,
   Sparkles,
   Tags,
   Upload,
   Wrench,
 } from "lucide-react";
+import AppearanceWorkspace from "./AppearanceWorkspace";
 import DashboardWorkspace from "./DashboardWorkspace";
 import ProjectWorkspace from "./ProjectWorkspace";
 import PresetWorkspace from "./PresetWorkspace";
@@ -20,6 +22,7 @@ import SkillLibraryWorkspace from "./SkillLibraryWorkspace";
 import SyncWorkspace from "./SyncWorkspace";
 import type { SkillNavigationSnapshot } from "../shared/types";
 import { getNavigationBreadcrumbLabel, NAV_ALL } from "../shared/skillNavigation";
+import { handleSystemThemeChanged, loadAndApplyThemePreferences } from "./theme/theme-manager";
 
 const agents = ["Codex", "Cursor", "Claude Code", "Hermes"];
 
@@ -29,6 +32,7 @@ const navTitles: Record<string, string> = {
   projects: "项目管理",
   presets: "Preset 预设",
   sync: "工具同步",
+  appearance: "外观",
   settings: "设置",
 };
 
@@ -36,7 +40,6 @@ function App() {
   const [activeNav, setActiveNav] = useState("skill-library");
   const [libraryNavigationKey, setLibraryNavigationKey] = useState(NAV_ALL);
   const [libraryNavigation, setLibraryNavigation] = useState<SkillNavigationSnapshot | null>(null);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [projectCount, setProjectCount] = useState(0);
   const [presetCount, setPresetCount] = useState(0);
   const [totalSkillCount, setTotalSkillCount] = useState(0);
@@ -58,12 +61,12 @@ function App() {
   }, [activeNav, libraryRefreshToken]);
 
   useEffect(() => {
-    window.skillforge.getSettings().then((settings) => setTheme(settings.theme === "light" ? "light" : "dark")).catch(() => setTheme("dark"));
+    loadAndApplyThemePreferences().catch(() => undefined);
+    const unsubscribe = window.skillforge.onSystemThemeChanged((systemDark) => {
+      handleSystemThemeChanged(systemDark);
+    });
+    return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
 
   async function handleImportSkill() {
     const imported = await window.skillforge.importSkillFile();
@@ -85,7 +88,7 @@ function App() {
   const libraryBreadcrumbParts = libraryBreadcrumb ? libraryBreadcrumb.split(" / ").filter(Boolean) : [];
 
   return (
-    <div className={`app-shell${theme === "light" ? " theme-light" : ""}`}>
+    <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark" aria-hidden="true"><span className="brand-mark-letter">SF</span></div>
@@ -106,6 +109,7 @@ function App() {
         <div className="sidebar-label sidebar-label-spaced">配置</div>
         <nav className="nav-list">
           <NavItem icon={<Wrench size={17} />} label="工具同步" active={activeNav === "sync"} onClick={() => setActiveNav("sync")} />
+          <NavItem icon={<Palette size={17} />} label="外观" active={activeNav === "appearance"} onClick={() => setActiveNav("appearance")} />
           <NavItem icon={<Settings size={17} />} label="设置" active={activeNav === "settings"} onClick={() => setActiveNav("settings")} />
         </nav>
 
@@ -169,8 +173,10 @@ function App() {
           <PresetWorkspace />
         ) : activeNav === "sync" ? (
           <SyncWorkspace onOpenProjects={() => setActiveNav("projects")} />
+        ) : activeNav === "appearance" ? (
+          <AppearanceWorkspace />
         ) : activeNav === "settings" ? (
-          <SettingsWorkspace onThemeSaved={(nextTheme) => setTheme(nextTheme === "light" ? "light" : "dark")} />
+          <SettingsWorkspace />
         ) : (
           <SkillLibraryWorkspace
             refreshToken={libraryRefreshToken}

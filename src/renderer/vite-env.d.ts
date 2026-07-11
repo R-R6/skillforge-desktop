@@ -1,3 +1,4 @@
+import type { ThemeSelection } from "../shared/theme";
 import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
 declare global {
@@ -31,6 +32,9 @@ declare global {
       applyPreset: (input: ApplyPresetInput) => Promise<DeploymentResult>;
       getSettings: () => Promise<SettingsMap>;
       setSetting: (key: string, value: string) => Promise<void>;
+      getSystemPrefersDark: () => Promise<boolean>;
+      syncNativeTheme: (themeSelection: ThemeSelection) => Promise<void>;
+      onSystemThemeChanged: (listener: (systemDark: boolean) => void) => () => void;
       getAppInfo: () => Promise<AppInfo>;
       backupDatabase: () => Promise<FileExportResult | null>;
       exportData: () => Promise<FileExportResult | null>;

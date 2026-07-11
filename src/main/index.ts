@@ -4,6 +4,7 @@ import path from "node:path";
 import { closeDatabase, initializeDatabase } from "./db";
 import { registerIpcHandlers } from "./ipc";
 import { logError, logInfo } from "./logger";
+import { applyWindowBackground, initializeThemeBridge, setMainWindowGetter } from "./theme";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -39,6 +40,8 @@ function createWindow() {
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
+
+  applyWindowBackground();
 }
 
 function createTray() {
@@ -71,6 +74,8 @@ app.whenReady().then(() => {
   );
   initializeDatabase();
   registerIpcHandlers();
+  setMainWindowGetter(() => mainWindow);
+  initializeThemeBridge();
   logInfo("app_started", { version: app.getVersion() });
   createWindow();
   createTray();

@@ -6,6 +6,8 @@ import { clearProjectSkills, deployProject } from "./deployment";
 import { importProjectSkill, loadDiscoveredProjectSkills, scanProject } from "./scanner";
 import { applyPresetToProject } from "./presets";
 import { logInfo } from "./logger";
+import { applyWindowBackground, getSystemPrefersDark, syncNativeThemeSource } from "./theme";
+import type { ThemeSelection } from "../shared/theme";
 import type { ApplyPresetInput, CreatePresetInput, CreateSkillInput, DeployProjectInput, SkillQuery, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
 export function registerIpcHandlers() {
@@ -62,6 +64,11 @@ export function registerIpcHandlers() {
   ipcMain.handle("settings:set", (_event, key: string, value: string) => {
     setSetting(key, value);
     logInfo("setting_updated", { key });
+  });
+  ipcMain.handle("theme:get-system-prefers-dark", () => getSystemPrefersDark());
+  ipcMain.handle("theme:sync-native", (_event, themeSelection: ThemeSelection) => {
+    syncNativeThemeSource(themeSelection);
+    applyWindowBackground();
   });
   ipcMain.handle("settings:info", () => ({
     version: app.getVersion(),

@@ -1,0 +1,14 @@
+[data-accent="ocean"] {
+  --accent: var(--cyan);
+  --accent-rgb: var(--cyan-rgb);
+  --border-brand: rgba(var(--cyan-rgb), 0.32);
+  --border-selected: var(--border-brand);
+}
+
+[data-theme="arctic-light"][data-accent="ocean"] {
+  --accent: #2563eb;
+  --accent-rgb: 37, 99, 235;
+  --border-brand: rgba(37, 99, 235, 0.35);
+  --border-selected: rgba(37, 99, 235, 0.45);
+  --brand-gradient: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}

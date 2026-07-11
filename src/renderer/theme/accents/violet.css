@@ -1,0 +1,19 @@
+[data-accent="violet"] {
+  --accent: #a78bfa;
+  --accent-rgb: 167, 139, 250;
+  --cyan: #a78bfa;
+  --cyan-rgb: 167, 139, 250;
+  --blue: #8b5cf6;
+  --blue-rgb: 139, 92, 246;
+  --border-brand: rgba(167, 139, 250, 0.32);
+  --border-selected: var(--border-brand);
+  --brand-gradient: linear-gradient(135deg, #c4b5fd 0%, #8b5cf6 100%);
+  --nav-bar-gradient: #a78bfa;
+}
+
+[data-theme="arctic-light"][data-accent="violet"] {
+  --accent: #7c3aed;
+  --accent-rgb: 124, 58, 237;
+  --border-brand: rgba(124, 58, 237, 0.32);
+  --brand-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}

@@ -1,0 +1,105 @@
+/* Graphite Dark — default brand theme (Visual System 2.0) */
+
+[data-theme="graphite-dark"] {
+  --bg: #13161c;
+  --surface: #1a1d24;
+  --surface-sidebar: #1a1d24;
+  --surface-hover: #20242c;
+  --surface-elevated: #252a33;
+  --surface-modal: #20242c;
+  --surface-subtle: #1a1d24;
+  --surface-selected: #252a33;
+  --surface-rgb: 26, 29, 36;
+  --surface-mid-rgb: 32, 36, 44;
+  --surface-strong-rgb: 37, 42, 51;
+  --panel-rgb: 26, 29, 36;
+
+  --cyan: #38bdf8;
+  --blue: #4f8cff;
+  --warm: #ff9f68;
+  --violet-decor: #8b7dff;
+  --cyan-rgb: 56, 189, 248;
+  --blue-rgb: 79, 140, 255;
+  --warm-rgb: 255, 159, 104;
+  --violet-decor-rgb: 139, 125, 255;
+
+  --accent: var(--cyan);
+  --accent-ai: var(--warm);
+  --accent-rgb: var(--cyan-rgb);
+  --accent-strong: var(--blue);
+  --accent-strong-rgb: var(--blue-rgb);
+
+  --indigo: var(--blue);
+  --indigo-rgb: var(--blue-rgb);
+  --violet: var(--violet-decor);
+  --violet-rgb: var(--violet-decor-rgb);
+  --ember: var(--warm);
+  --ember-rgb: var(--warm-rgb);
+
+  --brand-gradient: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%);
+  --brand-gradient-hover: linear-gradient(135deg, #5cc8fa 0%, #6a9dff 100%);
+  --ai-gradient: linear-gradient(135deg, var(--blue) 0%, var(--warm) 100%);
+  --logo-gradient: linear-gradient(135deg, var(--cyan) 0%, var(--blue) 78%, var(--warm) 100%);
+  --hero-decor-gradient: linear-gradient(100deg, rgba(var(--cyan-rgb), 0.04), rgba(var(--violet-decor-rgb), 0.03));
+  --hero-gradient: var(--hero-decor-gradient);
+  --nav-bar-gradient: var(--cyan);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-description: #94a3b8;
+  --text-disabled: #64748b;
+  --text: var(--text-primary);
+  --muted: var(--text-description);
+
+  --line: rgba(148, 163, 184, 0.1);
+  --line-strong: rgba(148, 163, 184, 0.16);
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --border-default: var(--line);
+  --border-brand: rgba(var(--cyan-rgb), 0.32);
+  --border-selected: var(--border-brand);
+  --border-accent: rgba(var(--blue-rgb), 0.28);
+  --border-indigo: var(--border-accent);
+  --border-violet: rgba(var(--violet-decor-rgb), 0.2);
+
+  --success: #34d399;
+  --success-rgb: 52, 211, 153;
+  --warning: #fbbf24;
+  --warning-rgb: 251, 191, 36;
+  --error: #fb7185;
+  --error-rgb: 251, 113, 133;
+  --info: var(--cyan);
+
+  --ambient-blue: rgba(var(--blue-rgb), 0.1);
+  --ambient-cyan: rgba(var(--cyan-rgb), 0.06);
+  --ambient-warm: rgba(var(--warm-rgb), 0.04);
+  --ambient-indigo: var(--ambient-blue);
+  --ambient-violet: var(--ambient-warm);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.28);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.48), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-inset-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-card: var(--shadow-xs);
+
+  --glow-soft: 0 0 32px rgba(var(--blue-rgb), 0.08);
+  --glow-brand: 0 6px 20px rgba(var(--blue-rgb), 0.22);
+  --glow-nav-active: 0 0 12px rgba(var(--cyan-rgb), 0.12);
+  --glow-skill-hover: 0 4px 16px rgba(0, 0, 0, 0.22);
+  --glow-skill-selected: 0 0 16px rgba(var(--cyan-rgb), 0.1);
+  --glow-ambient: var(--glow-soft);
+
+  --overlay: rgba(17, 19, 24, 0.72);
+  --blur-glass: 0px;
+
+  --hover-overlay: rgba(255, 255, 255, 0.05);
+  --active-nav-bg: transparent;
+  --chip-bg: rgba(255, 255, 255, 0.04);
+  --input-bg: var(--surface-hover);
+
+  --scrollbar-thumb: rgba(148, 163, 184, 0.2);
+  --scrollbar-thumb-hover: rgba(148, 163, 184, 0.36);
+
+  --shell-ambient-enabled: 1;
+  color-scheme: dark;
+}

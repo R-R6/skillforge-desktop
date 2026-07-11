@@ -1,0 +1,19 @@
+[data-accent="sunset"] {
+  --accent: #fb923c;
+  --accent-rgb: 251, 146, 60;
+  --cyan: #fb923c;
+  --cyan-rgb: 251, 146, 60;
+  --blue: #f97316;
+  --blue-rgb: 249, 115, 22;
+  --border-brand: rgba(251, 146, 60, 0.32);
+  --border-selected: var(--border-brand);
+  --brand-gradient: linear-gradient(135deg, #fdba74 0%, #f97316 100%);
+  --nav-bar-gradient: #fb923c;
+}
+
+[data-theme="arctic-light"][data-accent="sunset"] {
+  --accent: #ea580c;
+  --accent-rgb: 234, 88, 12;
+  --border-brand: rgba(234, 88, 12, 0.35);
+  --brand-gradient: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+}

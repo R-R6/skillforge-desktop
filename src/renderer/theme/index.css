@@ -1,0 +1,19 @@
+@import "./design-tokens.css";
+@import "./themes/graphite-dark.css";
+@import "./themes/arctic-light.css";
+@import "./themes/midnight.css";
+@import "./accents/ocean.css";
+@import "./accents/emerald.css";
+@import "./accents/sunset.css";
+@import "./accents/violet.css";
+@import "./accents/rose.css";
+@import "./density/compact.css";
+
+/* Default resolved theme before JS hydrates */
+:root {
+  --shell-ambient-enabled: 1;
+  color-scheme: dark;
+  font-family: Inter, "Microsoft YaHei", system-ui, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}

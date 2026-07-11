@@ -30,6 +30,13 @@ contextBridge.exposeInMainWorld("skillforge", {
   applyPreset: (input: ApplyPresetInput) => ipcRenderer.invoke("presets:apply", input) as Promise<DeploymentResult>,
   getSettings: () => ipcRenderer.invoke("settings:get") as Promise<SettingsMap>,
   setSetting: (key: string, value: string) => ipcRenderer.invoke("settings:set", key, value) as Promise<void>,
+  getSystemPrefersDark: () => ipcRenderer.invoke("theme:get-system-prefers-dark") as Promise<boolean>,
+  syncNativeTheme: (themeSelection: string) => ipcRenderer.invoke("theme:sync-native", themeSelection) as Promise<void>,
+  onSystemThemeChanged: (listener: (systemDark: boolean) => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, systemDark: boolean) => listener(systemDark);
+    ipcRenderer.on("theme:system-changed", handler);
+    return () => ipcRenderer.removeListener("theme:system-changed", handler);
+  },
   getAppInfo: () => ipcRenderer.invoke("settings:info") as Promise<AppInfo>,
   backupDatabase: () => ipcRenderer.invoke("settings:backup") as Promise<FileExportResult | null>,
   exportData: () => ipcRenderer.invoke("settings:export") as Promise<FileExportResult | null>,

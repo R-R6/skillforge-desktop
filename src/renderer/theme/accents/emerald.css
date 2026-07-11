@@ -1,0 +1,19 @@
+[data-accent="emerald"] {
+  --accent: #34d399;
+  --accent-rgb: 52, 211, 153;
+  --cyan: #34d399;
+  --cyan-rgb: 52, 211, 153;
+  --blue: #10b981;
+  --blue-rgb: 16, 185, 129;
+  --border-brand: rgba(52, 211, 153, 0.32);
+  --border-selected: var(--border-brand);
+  --brand-gradient: linear-gradient(135deg, #6ee7b7 0%, #10b981 100%);
+  --nav-bar-gradient: #34d399;
+}
+
+[data-theme="arctic-light"][data-accent="emerald"] {
+  --accent: #059669;
+  --accent-rgb: 5, 150, 105;
+  --border-brand: rgba(5, 150, 105, 0.35);
+  --brand-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
