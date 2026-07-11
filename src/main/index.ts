@@ -21,7 +21,7 @@ function createWindow() {
     minWidth: 1080,
     minHeight: 680,
     title: "SkillForge Desktop",
-    backgroundColor: "#07110f",
+    backgroundColor: "#13161c",
     icon: getAssetPath("icon.png"),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),

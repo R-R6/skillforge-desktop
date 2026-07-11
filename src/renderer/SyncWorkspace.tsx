@@ -8,7 +8,7 @@ interface SyncWorkspaceProps {
 
 const tools: Array<{ id: AgentTool; label: string; entry: string; path: string }> = [
   { id: "codex", label: "Codex", entry: "AGENTS.md", path: ".codex/skills" },
-  { id: "cursor", label: "Cursor", entry: ".cursor/rules/skillforge-skills.mdc", path: ".cursor/rules" },
+  { id: "cursor", label: "Cursor", entry: ".cursor/rules/skillforge-skills.mdc", path: ".cursor/skills · .cursor/rules" },
   { id: "claude-code", label: "Claude Code", entry: "CLAUDE.md", path: ".claude/skills" },
   { id: "hermes", label: "Hermes", entry: "HERMES.md", path: ".agents/skills" },
 ];

@@ -15,7 +15,15 @@ export interface SkillSummary {
 export interface SkillQuery {
   search?: string;
   category?: string;
+  navigationKey?: string;
 }
+
+export interface SkillCategoryCount {
+  category: string;
+  count: number;
+}
+
+export type { SkillNavigationSnapshot, SkillSourceGroup } from "./skillNavigation";
 
 export interface CreateSkillInput {
   name: string;
@@ -37,6 +45,9 @@ export interface ProjectSummary {
   path: string;
   tools: AgentTool[];
   skillCount: number;
+  discoveredSkillCount: number;
+  discoveredTools: AgentTool[];
+  lastScannedAt: string | null;
   updatedAt: string;
 }
 
@@ -57,7 +68,7 @@ export interface ClearProjectResult {
   preservedFiles: string[];
 }
 
-export type SkillSourceTool = AgentTool | "agents" | "jwh";
+export type SkillSourceTool = AgentTool | "agents" | "my-skills";
 
 export interface ExternalSkillRecord {
   id: string;
@@ -69,17 +80,20 @@ export interface ExternalSkillRecord {
   managed: boolean;
   importable: boolean;
   description: string;
+  scope: "project" | "global";
 }
 
 export interface ProjectScanResult {
   project: ProjectSummary;
   skills: ExternalSkillRecord[];
+  globalSkills: ExternalSkillRecord[];
   scannedAt: string;
 }
 
 export interface ImportExternalSkillInput {
   projectId: string;
   relativePath: string;
+  sourcePath?: string;
 }
 
 export interface PresetSummary {

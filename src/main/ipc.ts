@@ -1,15 +1,17 @@
 import { app, dialog, ipcMain } from "electron";
 import fs from "node:fs";
 import path from "node:path";
-import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getSettings, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
+import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getSettings, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkillCategories, listSkillNavigation, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
 import { clearProjectSkills, deployProject } from "./deployment";
-import { importProjectSkill, scanProject } from "./scanner";
+import { importProjectSkill, loadDiscoveredProjectSkills, scanProject } from "./scanner";
 import { applyPresetToProject } from "./presets";
 import { logInfo } from "./logger";
 import type { ApplyPresetInput, CreatePresetInput, CreateSkillInput, DeployProjectInput, SkillQuery, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
 export function registerIpcHandlers() {
   ipcMain.handle("skills:list", (_event, query?: SkillQuery) => listSkills(query));
+  ipcMain.handle("skills:list-categories", () => listSkillCategories());
+  ipcMain.handle("skills:list-navigation", () => listSkillNavigation());
   ipcMain.handle("skills:import-file", async () => {
     const result = await dialog.showOpenDialog({
       title: "导入 Skill 文件",
@@ -43,11 +45,13 @@ export function registerIpcHandlers() {
       properties: ["openDirectory", "createDirectory"],
     });
     if (result.canceled || !result.filePaths[0]) return null;
-    return addProject(result.filePaths[0]);
+    const project = addProject(result.filePaths[0]);
+    return scanProject(project.id).then((scanResult) => scanResult.project);
   });
   ipcMain.handle("projects:deploy", (_event, input: DeployProjectInput) => deployProject(input));
   ipcMain.handle("projects:clear-skills", (_event, projectId: string) => clearProjectSkills(projectId));
   ipcMain.handle("projects:scan", (_event, projectId: string) => scanProject(projectId));
+  ipcMain.handle("projects:discovered-skills", (_event, projectId: string) => loadDiscoveredProjectSkills(projectId));
   ipcMain.handle("projects:import-skill", (_event, input) => importProjectSkill(input));
   ipcMain.handle("presets:list", () => listPresets());
   ipcMain.handle("presets:create", (_event, input: CreatePresetInput) => createPreset(input));

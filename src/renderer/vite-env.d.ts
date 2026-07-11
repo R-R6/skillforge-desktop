@@ -1,9 +1,11 @@
-import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
 declare global {
   interface Window {
     skillforge: {
       listSkills: (query?: SkillQuery) => Promise<SkillSummary[]>;
+      listSkillCategories: () => Promise<SkillCategoryCount[]>;
+      listSkillNavigation: () => Promise<SkillNavigationSnapshot>;
       importSkillFile: () => Promise<SkillSummary | null>;
       createSkill: (input: CreateSkillInput) => Promise<SkillSummary>;
       updateSkill: (input: UpdateSkillInput) => Promise<SkillSummary>;
@@ -20,6 +22,7 @@ declare global {
       deployProject: (input: DeployProjectInput) => Promise<DeploymentResult>;
       clearProjectSkills: (projectId: string) => Promise<ClearProjectResult>;
       scanProject: (projectId: string) => Promise<ProjectScanResult>;
+      getDiscoveredProjectSkills: (projectId: string) => Promise<ProjectScanResult>;
       importExternalSkill: (input: ImportExternalSkillInput) => Promise<SkillSummary>;
       listPresets: () => Promise<PresetSummary[]>;
       createPreset: (input: CreatePresetInput) => Promise<PresetSummary>;

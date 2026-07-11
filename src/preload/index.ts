@@ -1,8 +1,10 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
 contextBridge.exposeInMainWorld("skillforge", {
   listSkills: (query?: SkillQuery) => ipcRenderer.invoke("skills:list", query) as Promise<SkillSummary[]>,
+  listSkillCategories: () => ipcRenderer.invoke("skills:list-categories") as Promise<SkillCategoryCount[]>,
+  listSkillNavigation: () => ipcRenderer.invoke("skills:list-navigation") as Promise<SkillNavigationSnapshot>,
   importSkillFile: () => ipcRenderer.invoke("skills:import-file") as Promise<SkillSummary | null>,
   createSkill: (input: CreateSkillInput) => ipcRenderer.invoke("skills:create", input) as Promise<SkillSummary>,
   updateSkill: (input: UpdateSkillInput) => ipcRenderer.invoke("skills:update", input) as Promise<SkillSummary>,
@@ -19,6 +21,7 @@ contextBridge.exposeInMainWorld("skillforge", {
   deployProject: (input: DeployProjectInput) => ipcRenderer.invoke("projects:deploy", input) as Promise<DeploymentResult>,
   clearProjectSkills: (projectId: string) => ipcRenderer.invoke("projects:clear-skills", projectId) as Promise<ClearProjectResult>,
   scanProject: (projectId: string) => ipcRenderer.invoke("projects:scan", projectId) as Promise<ProjectScanResult>,
+  getDiscoveredProjectSkills: (projectId: string) => ipcRenderer.invoke("projects:discovered-skills", projectId) as Promise<ProjectScanResult>,
   importExternalSkill: (input: ImportExternalSkillInput) => ipcRenderer.invoke("projects:import-skill", input) as Promise<SkillSummary>,
   listPresets: () => ipcRenderer.invoke("presets:list") as Promise<PresetSummary[]>,
   createPreset: (input: CreatePresetInput) => ipcRenderer.invoke("presets:create", input) as Promise<PresetSummary>,

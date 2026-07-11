@@ -1,0 +1,23 @@
+---
+description: 修改 skillforge-desktop 代码后自动重启/热重载开发环境
+alwaysApply: true
+---
+
+# 自动重启开发环境
+
+在本项目（skillforge-desktop）完成代码修改后，**必须**由 Agent 自动重启应用，不要让用户手动操作。
+
+## 执行步骤
+
+1. 若已有 dev 进程在运行，先结束旧的 Electron 进程再重启。
+2. 优先使用 `npm run dev`（electron-vite 热重载）；若只改了 main/preload 或 dev 未运行，则先 `npm run build` 再启动 dev。
+3. 在后台启动 dev，确认终端无致命错误后再结束本轮回复。
+4. 回复中简要说明应用已重启，**不要**写「请手动重启」。
+
+## 命令参考（PowerShell）
+
+```powershell
+Get-Process -Name "electron","SkillForge Desktop" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+cd "f:\project\myself\skillforge-desktop"
+npm run dev
+```

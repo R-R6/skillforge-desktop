@@ -5,7 +5,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
-import type { AgentTool, CreatePresetInput, CreateSkillInput, PresetSummary, ProjectSummary, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import type { AgentTool, CreatePresetInput, CreateSkillInput, ExternalSkillRecord, PresetSummary, ProjectSummary, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import { buildSkillNavigation, matchesNavigationKey, NAV_ALL } from "../shared/skillNavigation";
+import { collectSkillMarkdownFiles, parseSkillMetadata } from "../shared/skillDiscovery";
 
 let database: Database.Database | null = null;
 let databasePath: string | null = null;
@@ -35,18 +37,16 @@ function getResourceSkillsPath() {
 
 function parseSkillFile(filePath: string, category = "内置 Skill"): SkillSummary {
   const content = fs.readFileSync(filePath, "utf8");
-  const heading = content.match(/^#\s+(.+)$/m)?.[1]?.trim();
-  const description = content.match(/^>\s+(.+)$/m)?.[1]?.trim();
+  const metadata = parseSkillMetadata(content, filePath);
   const platforms = content
     .match(/^支持平台:\s*(.+)$/m)?.[1]
     ?.split(",")
     .map((platform) => platform.trim()) ?? [];
-  const name = heading || path.basename(filePath, path.extname(filePath));
 
   return {
-    id: name,
-    name,
-    description: description || "暂无描述",
+    id: metadata.name,
+    name: metadata.name,
+    description: metadata.description === "未读取到描述" ? "暂无描述" : metadata.description,
     category,
     platforms,
     content,
@@ -86,13 +86,21 @@ function seedSkills() {
   collect(skillsPath);
 
   const transaction = database!.transaction(() => {
+    const seededIds: string[] = [];
     for (const file of files) {
       const skill = parseSkillFile(file.filePath, file.category);
+      seededIds.push(skill.id);
       insert.run({
         ...skill,
         platforms: JSON.stringify(skill.platforms),
         sourcePath: file.filePath,
       });
+    }
+    if (seededIds.length > 0) {
+      const placeholders = seededIds.map(() => "?").join(", ");
+      database!
+        .prepare(`DELETE FROM skills WHERE source_type = 'builtin' AND source_path IS NOT NULL AND id NOT IN (${placeholders})`)
+        .run(...seededIds);
     }
   });
   transaction();
@@ -100,14 +108,21 @@ function seedSkills() {
 
 export function initializeDatabase() {
   const userDataPath = app.getPath("userData");
-  const compatiblePath = path.join(userDataPath, "jwh-skill.db");
-  const legacyPath = path.join(userDataPath, "skillforge.db");
-  if (!fs.existsSync(compatiblePath) && fs.existsSync(legacyPath)) {
-    fs.copyFileSync(legacyPath, compatiblePath);
+  const databaseFile = path.join(userDataPath, "skillforge.db");
+  const legacyDatabaseFiles = [
+    path.join(userDataPath, "jwh-skill.db"),
+    path.join(userDataPath, "skillforge-desktop.db"),
+  ];
+  if (!fs.existsSync(databaseFile)) {
+    for (const legacyPath of legacyDatabaseFiles) {
+      if (fs.existsSync(legacyPath)) {
+        fs.copyFileSync(legacyPath, databaseFile);
+        break;
+      }
+    }
   }
-  databasePath = compatiblePath;
+  databasePath = databaseFile;
   database = new Database(databasePath);
-  database.pragma("journal_mode = WAL");
   database.exec(`
     CREATE TABLE IF NOT EXISTS skills (
       id TEXT PRIMARY KEY,
@@ -181,23 +196,75 @@ export function initializeDatabase() {
   } catch {
     // Column already exists in an initialized database.
   }
+  try {
+    database.exec("ALTER TABLE projects ADD COLUMN discovered_skill_count INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    // Column already exists in an initialized database.
+  }
+  try {
+    database.exec("ALTER TABLE projects ADD COLUMN discovered_tools TEXT NOT NULL DEFAULT '[]'");
+  } catch {
+    // Column already exists in an initialized database.
+  }
+  try {
+    database.exec("ALTER TABLE projects ADD COLUMN scan_cache TEXT");
+  } catch {
+    // Column already exists in an initialized database.
+  }
+  try {
+    database.exec("ALTER TABLE projects ADD COLUMN last_scanned_at TEXT");
+  } catch {
+    // Column already exists in an initialized database.
+  }
   database.pragma("foreign_keys = ON");
   seedSkills();
+}
+
+export function listSkillNavigation(): SkillNavigationSnapshot {
+  if (!database) throw new Error("Database is not initialized");
+  const rows = database
+    .prepare(`
+      SELECT category, source_type AS sourceType, source_path AS sourcePath, source_url AS sourceUrl
+      FROM skills
+    `)
+    .all() as Array<{
+    category: string;
+    sourceType: "builtin" | "external";
+    sourcePath: string | null;
+    sourceUrl: string | null;
+  }>;
+  return buildSkillNavigation(rows);
+}
+
+export function listSkillCategories(): SkillCategoryCount[] {
+  return listSkillNavigation().builtinCategories;
 }
 
 export function listSkills(query: SkillQuery = {}): SkillSummary[] {
   if (!database) throw new Error("Database is not initialized");
   const search = query.search?.trim() ?? "";
   const category = query.category?.trim() ?? "";
+  const navigationKey = query.navigationKey?.trim() ?? "";
   const rows = database
     .prepare(`
       SELECT id, name, description, category, platforms, tags, content, enabled, source_type AS sourceType, source_path AS sourcePath, source_url AS sourceUrl
       FROM skills
       WHERE (@search = '' OR name LIKE @pattern OR description LIKE @pattern OR tags LIKE @pattern)
-        AND (@category = '' OR category = @category)
+        AND (
+          @useNavigation = 1
+          OR @category = ''
+          OR category = @category
+          OR category LIKE @categoryPrefix
+        )
       ORDER BY name COLLATE NOCASE ASC
     `)
-    .all({ search, pattern: `%${search}%`, category }) as Array<{
+    .all({
+      search,
+      pattern: `%${search}%`,
+      category,
+      categoryPrefix: category ? `${category} / %` : "",
+      useNavigation: navigationKey && navigationKey !== NAV_ALL ? 1 : 0,
+    }) as Array<{
     id: string;
     name: string;
     description: string;
@@ -211,14 +278,16 @@ export function listSkills(query: SkillQuery = {}): SkillSummary[] {
     sourceUrl: string | null;
   }>;
 
-  return rows.map((row) => ({
-    ...row,
-    platforms: JSON.parse(row.platforms) as string[],
-    tags: JSON.parse(row.tags) as string[],
-    sourceType: row.sourceType,
-    enabled: row.enabled === 1,
-    sourceUrl: row.sourceUrl,
-  }));
+  return rows
+    .map((row) => ({
+      ...row,
+      platforms: JSON.parse(row.platforms) as string[],
+      tags: JSON.parse(row.tags) as string[],
+      sourceType: row.sourceType,
+      enabled: row.enabled === 1,
+      sourceUrl: row.sourceUrl,
+    }))
+    .filter((skill) => (navigationKey && navigationKey !== NAV_ALL ? matchesNavigationKey(skill, navigationKey) : true));
 }
 
 function projectRowToSummary(row: {
@@ -227,11 +296,21 @@ function projectRowToSummary(row: {
   path: string;
   tools: string;
   skillCount: number;
+  discoveredSkillCount?: number;
+  discoveredTools?: string;
+  lastScannedAt?: string | null;
   updatedAt: string;
 }): ProjectSummary {
   return {
-    ...row,
+    id: row.id,
+    name: row.name,
+    path: row.path,
     tools: JSON.parse(row.tools) as AgentTool[],
+    skillCount: row.skillCount,
+    discoveredSkillCount: row.discoveredSkillCount ?? 0,
+    discoveredTools: JSON.parse(row.discoveredTools ?? "[]") as AgentTool[],
+    lastScannedAt: row.lastScannedAt ?? null,
+    updatedAt: row.updatedAt,
   };
 }
 
@@ -241,6 +320,9 @@ export function listProjects(): ProjectSummary[] {
     .prepare(`
       SELECT p.id, p.name, p.path, p.tools,
              COUNT(ps.skill_id) AS skillCount,
+             p.discovered_skill_count AS discoveredSkillCount,
+             p.discovered_tools AS discoveredTools,
+             p.last_scanned_at AS lastScannedAt,
              p.updated_at AS updatedAt
       FROM projects p
       LEFT JOIN project_skills ps ON ps.project_id = p.id
@@ -253,6 +335,9 @@ export function listProjects(): ProjectSummary[] {
     path: string;
     tools: string;
     skillCount: number;
+    discoveredSkillCount: number;
+    discoveredTools: string;
+    lastScannedAt: string | null;
     updatedAt: string;
   }>;
   return rows.map(projectRowToSummary);
@@ -264,6 +349,9 @@ export function getProject(projectId: string): ProjectSummary | null {
     .prepare(`
       SELECT p.id, p.name, p.path, p.tools,
              COUNT(ps.skill_id) AS skillCount,
+             p.discovered_skill_count AS discoveredSkillCount,
+             p.discovered_tools AS discoveredTools,
+             p.last_scanned_at AS lastScannedAt,
              p.updated_at AS updatedAt
       FROM projects p
       LEFT JOIN project_skills ps ON ps.project_id = p.id
@@ -276,9 +364,38 @@ export function getProject(projectId: string): ProjectSummary | null {
     path: string;
     tools: string;
     skillCount: number;
+    discoveredSkillCount: number;
+    discoveredTools: string;
+    lastScannedAt: string | null;
     updatedAt: string;
   } | undefined;
   return row ? projectRowToSummary(row) : null;
+}
+
+export function saveProjectScanCache(projectId: string, skills: ExternalSkillRecord[], discoveredTools: AgentTool[]) {
+  if (!database) throw new Error("Database is not initialized");
+  database
+    .prepare(`
+      UPDATE projects
+      SET discovered_skill_count = ?,
+          discovered_tools = ?,
+          scan_cache = ?,
+          last_scanned_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `)
+    .run(skills.length, JSON.stringify(discoveredTools), JSON.stringify(skills), projectId);
+}
+
+export function getDiscoveredProjectSkills(projectId: string): ExternalSkillRecord[] {
+  if (!database) throw new Error("Database is not initialized");
+  const row = database.prepare("SELECT scan_cache AS scanCache FROM projects WHERE id = ?").get(projectId) as { scanCache: string | null } | undefined;
+  if (!row?.scanCache) return [];
+  try {
+    return JSON.parse(row.scanCache) as ExternalSkillRecord[];
+  } catch {
+    return [];
+  }
 }
 
 export function addProject(projectPath: string): ProjectSummary {
@@ -532,17 +649,7 @@ export function importSkillFromFile(filePath: string): SkillSummary {
 }
 
 function collectSkillFiles(rootPath: string): string[] {
-  if (fs.statSync(rootPath).isFile()) return [rootPath];
-  const directSkillFile = path.join(rootPath, "SKILL.md");
-  if (fs.existsSync(directSkillFile) && fs.statSync(directSkillFile).isFile()) return [directSkillFile];
-  const ignoredNames = new Set(["readme.md", "index.md", "agents.md", "claude.md", "hermes.md"]);
-  const files: string[] = [];
-  for (const entry of fs.readdirSync(rootPath, { withFileTypes: true })) {
-    const filePath = path.join(rootPath, entry.name);
-    if (entry.isDirectory()) files.push(...collectSkillFiles(filePath));
-    else if (entry.isFile() && [".md", ".mdc"].includes(path.extname(entry.name).toLowerCase()) && !ignoredNames.has(entry.name.toLowerCase())) files.push(filePath);
-  }
-  return files;
+  return collectSkillMarkdownFiles(rootPath);
 }
 
 export function importSkillsFromDirectory(directoryPath: string, sourceUrl?: string): SkillSummary[] {

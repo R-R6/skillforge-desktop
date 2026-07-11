@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { MY_SKILLS_ROOT, MY_SKILLS_SKILLS_DIR, mySkillsAtReference } from "../shared/skillPaths";
 import type { AgentTool, DeployProjectInput, DeploymentResult } from "../shared/types";
 import { getProject, getProjectSkillIds, getSkillsByIds, updateProjectBindings } from "./db";
 
@@ -40,7 +41,7 @@ function toolEntryPath(projectPath: string, tool: AgentTool) {
 }
 
 function writeSkillFiles(projectPath: string, skills: ReturnType<typeof getSkillsByIds>) {
-  const skillsDir = path.join(projectPath, ".jwh-skills", "skills");
+  const skillsDir = path.join(projectPath, MY_SKILLS_SKILLS_DIR);
   fs.mkdirSync(skillsDir, { recursive: true });
   const files: string[] = [];
 
@@ -50,7 +51,7 @@ function writeSkillFiles(projectPath: string, skills: ReturnType<typeof getSkill
     files.push(filePath);
   }
 
-  const indexPath = path.join(projectPath, ".jwh-skills", "index.md");
+  const indexPath = path.join(projectPath, MY_SKILLS_ROOT, "index.md");
   const index = [
     "# SkillForge Desktop Skills",
     "",
@@ -65,7 +66,7 @@ function writeSkillFiles(projectPath: string, skills: ReturnType<typeof getSkill
 }
 
 function writeToolEntry(projectPath: string, tool: AgentTool, skills: ReturnType<typeof getSkillsByIds>) {
-  const names = skills.map((skill) => `- @.jwh-skills/skills/${safeFileName(skill.name)}.md`).join("\n");
+  const names = skills.map((skill) => `- ${mySkillsAtReference(`${safeFileName(skill.name)}.md`)}`).join("\n");
   const body = `## SkillForge Desktop\n\n以下 Skill 已绑定到当前项目：\n${names || "- 暂无 Skill"}`;
   const filePath = toolEntryPath(projectPath, tool);
   if (tool === "cursor") {
@@ -85,10 +86,10 @@ export function deployProject(input: DeployProjectInput): DeploymentResult {
   for (const previousTool of project.tools) {
     if (!nextTools.has(previousTool)) removeManagedBlock(toolEntryPath(project.path, previousTool));
   }
-  const nextFilePaths = new Set(skills.map((skill) => path.join(project.path, ".jwh-skills", "skills", `${safeFileName(skill.name)}.md`)));
+  const nextFilePaths = new Set(skills.map((skill) => path.join(project.path, MY_SKILLS_SKILLS_DIR, `${safeFileName(skill.name)}.md`)));
   for (const previousSkill of previousSkills) {
     if (skills.some((skill) => skill.id === previousSkill.id)) continue;
-    const filePath = path.join(project.path, ".jwh-skills", "skills", `${safeFileName(previousSkill.name)}.md`);
+    const filePath = path.join(project.path, MY_SKILLS_SKILLS_DIR, `${safeFileName(previousSkill.name)}.md`);
     if (nextFilePaths.has(filePath) || !fs.existsSync(filePath)) continue;
     if (fs.readFileSync(filePath, "utf8") === previousSkill.content) fs.unlinkSync(filePath);
   }
@@ -105,7 +106,7 @@ export function clearProjectSkills(projectId: string) {
   const removedFiles: string[] = [];
   const preservedFiles: string[] = [];
   for (const skill of boundSkills) {
-    const filePath = path.join(project.path, ".jwh-skills", "skills", `${safeFileName(skill.name)}.md`);
+    const filePath = path.join(project.path, MY_SKILLS_SKILLS_DIR, `${safeFileName(skill.name)}.md`);
     if (!fs.existsSync(filePath)) continue;
     if (fs.readFileSync(filePath, "utf8") === skill.content) {
       fs.unlinkSync(filePath);
