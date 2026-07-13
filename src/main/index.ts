@@ -1,6 +1,7 @@
 import { app, BrowserWindow, Menu, Tray } from "electron";
 import fs from "node:fs";
 import path from "node:path";
+import { applyBootstrapPaths } from "./bootstrap";
 import { closeDatabase, initializeDatabase } from "./db";
 import { registerIpcHandlers } from "./ipc";
 import { logError, logInfo } from "./logger";
@@ -8,6 +9,8 @@ import { applyWindowBackground, getInitialTitleBarOverlay, initializeThemeBridge
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+
+applyBootstrapPaths();
 
 function getAssetPath(fileName: string) {
   const packagedPath = path.join(process.resourcesPath, fileName);

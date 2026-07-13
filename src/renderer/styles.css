@@ -169,9 +169,10 @@ html[data-motion="reduced"] .app-shell {
    ========================================================================== */
 
 .main-content { width: min(1440px, calc(100vw - 236px)); margin: 0 auto; padding: 30px 42px 56px; }
-.topbar { display: flex; align-items: flex-end; justify-content: space-between; }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .breadcrumb { display: flex; align-items: center; gap: 5px; color: var(--text-description); font-size: 11px; }
 .topbar h1 { margin: 9px 0 0; font-size: 28px; letter-spacing: -0.04em; color: var(--text-primary); font-weight: 650; }
+.topbar-actions { flex-shrink: 0; }
 
 /* ==========================================================================
    Buttons
@@ -190,7 +191,7 @@ html[data-motion="reduced"] .app-shell {
 
 .primary-button, .deploy-button {
   padding: 10px 16px;
-  color: var(--text-primary);
+  color: var(--text-on-brand, #fff);
   background: var(--brand-gradient);
   box-shadow: var(--glow-brand);
 }
@@ -259,14 +260,58 @@ html[data-motion="reduced"] .app-shell {
 
 .compact-button { min-height: 28px; padding: 4px 10px; font-size: 10px; }
 
+/* Toolbar action bar — unified sizing & hierarchy */
+.action-bar,
+.project-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-bar > .ghost-button,
+.action-bar > .outline-button,
+.action-bar > .primary-button,
+.action-bar > .import-menu-anchor > .outline-button,
+.project-actions > .ghost-button,
+.project-actions > .outline-button,
+.project-actions > .primary-button,
+.project-actions > .import-menu-anchor > .outline-button,
+.topbar-actions > .primary-button,
+.topbar-actions > .outline-button,
+.topbar-actions > .ghost-button {
+  width: auto;
+  margin-top: 0;
+  min-height: 36px;
+  padding: 0 14px;
+  font-size: 12px;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.action-bar > .primary-button,
+.project-actions > .primary-button,
+.topbar-actions > .primary-button {
+  padding: 0 16px;
+}
+
+.action-divider {
+  flex: 0 0 1px;
+  align-self: center;
+  width: 1px;
+  height: 20px;
+  margin: 0 2px;
+  background: var(--line-strong);
+}
+
 /* ==========================================================================
    Hero & stats
    ========================================================================== */
 
-.hero-strip, .dashboard-intro {
+.hero-strip {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
   margin-top: 29px;
   padding: 24px 28px;
   border: 1px solid var(--line);
@@ -275,14 +320,44 @@ html[data-motion="reduced"] .app-shell {
   box-shadow: var(--shadow-inset-highlight), var(--shadow-card);
 }
 
-.dashboard-intro { margin-top: 0; padding: 21px 23px; border-radius: 12px; }
+.dashboard-intro {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 0;
+  padding: 21px 23px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--hero-gradient), var(--surface);
+  box-shadow: var(--shadow-inset-highlight), var(--shadow-card);
+}
 .dashboard-intro h2 { margin: 8px 0 6px; font-size: 20px; }
 .dashboard-intro p { margin: 0; color: var(--text-description); font-size: 11px; }
 
 .eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-ai); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
 .hero-copy h2 { margin: 10px 0 7px; font-size: 22px; letter-spacing: -0.03em; }
-.hero-copy p { margin: 0; color: var(--text-description); font-size: 12px; }
-.agent-stack { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; max-width: 390px; }
+.hero-copy p { margin: 0; color: var(--text-description); font-size: 12px; max-width: 52ch; }
+
+.hero-platforms {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.hero-platforms-label {
+  flex-shrink: 0;
+  color: var(--text-disabled);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.agent-stack { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 
 .agent-pill {
   display: inline-flex;
@@ -322,11 +397,69 @@ html[data-motion="reduced"] .app-shell {
    Skill library
    ========================================================================== */
 
-.library-section { margin-top: 18px; }
-.section-toolbar { display: flex; align-items: flex-end; justify-content: space-between; }
+.section-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .section-toolbar h2 { margin: 0; font-size: 18px; color: var(--text-primary); }
 .section-toolbar span { display: block; margin-top: 6px; color: var(--text-description); font-size: 11px; }
-.library-section > .section-toolbar { gap: 10px; flex-wrap: wrap; }
+
+.library-workspace { margin-top: 35px; }
+.library-workspace > .section-toolbar { margin-bottom: 0; }
+
+.import-menu-anchor { position: relative; }
+.menu-chevron { transition: transform var(--transition-hover); }
+.menu-chevron.open { transform: rotate(180deg); }
+.import-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: grid;
+  gap: 2px;
+  min-width: 188px;
+  padding: 5px;
+  border: 1px solid var(--line-strong);
+  border-radius: 10px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-card);
+}
+.import-menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  color: var(--text-secondary);
+  text-align: left;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  font-size: 11px;
+  transition: color var(--transition-hover), background var(--transition-hover);
+}
+.import-menu button:hover {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.library-list-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px 11px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 700;
+}
+.library-list-heading b {
+  margin-right: auto;
+  color: var(--text-disabled);
+  font-size: 10px;
+  font-weight: 400;
+}
+.library-search {
+  width: min(100%, 300px);
+  margin-left: auto;
+}
 
 .search-box, .category-filter-box, .project-search-field {
   display: flex;
@@ -361,7 +494,7 @@ html[data-motion="reduced"] .app-shell {
 
 kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--line); border-radius: 4px; font-size: 9px; }
 
-.library-browser { display: grid; grid-template-columns: 210px minmax(0, 1fr) 320px; gap: 14px; align-items: start; min-height: 520px; }
+.library-browser { display: grid; grid-template-columns: 210px minmax(0, 1fr) 320px; gap: 14px; align-items: start; min-height: 520px; margin-top: 17px; }
 
 .category-sidebar {
   display: flex;
@@ -651,7 +784,6 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 
 .project-workspace { margin-top: 35px; }
 .project-toolbar { align-items: center; }
-.project-actions { display: flex; gap: 8px; }
 .notice-bar { display: flex; align-items: center; gap: 8px; margin-top: 17px; padding: 10px 13px; color: var(--text-secondary); border: 1px solid var(--line); border-radius: 8px; background: var(--surface-hover); font-size: 11px; }
 .project-layout { display: grid; grid-template-columns: 315px minmax(0, 1fr); gap: 15px; margin-top: 17px; }
 .project-list, .project-detail { min-height: 540px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow-xs); }
@@ -788,6 +920,23 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 .settings-hint { margin: 17px 0 0; color: var(--text-description); font-size: 10px; line-height: 1.7; }
 .settings-actions { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
 .settings-actions .outline-button { width: auto; padding: 9px 11px; }
+.settings-inline-notice { margin: 12px 0 0; padding: 10px 12px; color: var(--text-secondary); border: 1px solid var(--line); border-radius: 8px; background: var(--surface-hover); font-size: 10px; line-height: 1.55; }
+.storage-settings-card { grid-column: 1 / -1; }
+.storage-summary-total { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-hover); }
+.storage-summary-total span { color: var(--text-description); font-size: 10px; }
+.storage-summary-total strong { color: var(--text-primary); font-size: 18px; }
+.storage-entry-list, .storage-clone-list { display: grid; gap: 8px; margin-top: 14px; }
+.storage-entry-row, .storage-clone-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface-hover); }
+.storage-clone-row { grid-template-columns: minmax(0, 1fr) auto auto; }
+.storage-entry-copy, .storage-clone-copy { display: grid; gap: 4px; min-width: 0; }
+.storage-entry-copy strong, .storage-clone-copy strong { color: var(--text-primary); font-size: 11px; }
+.storage-entry-copy code, .storage-clone-copy code, .storage-path-code { overflow: hidden; color: var(--text-description); font-family: ui-monospace, monospace; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.storage-clone-copy small { color: var(--text-description); font-size: 9px; }
+.storage-entry-size { color: var(--text-secondary); font-size: 10px; font-weight: 600; white-space: nowrap; }
+.storage-actions-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.storage-clone-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 18px; color: var(--text-description); font-size: 10px; }
+.storage-clone-heading strong { color: var(--text-secondary); font-size: 11px; }
+.settings-card-heading .compact-button { margin-left: auto; }
 .info-list { display: grid; gap: 10px; margin-top: 17px; }
 .info-list div { display: grid; grid-template-columns: 62px minmax(0, 1fr); align-items: center; gap: 8px; }
 .info-list span { color: var(--text-description); font-size: 10px; }
@@ -837,6 +986,39 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 .skill-editor-form textarea { min-height: 245px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; line-height: 1.65; }
 .skill-editor-form input::placeholder, .skill-editor-form textarea::placeholder { color: var(--text-disabled); }
 .git-import-help { margin: 0; color: var(--text-description); font-size: 11px; line-height: 1.7; }
+.git-import-preview { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-hover); }
+.git-import-preview-row { display: grid; gap: 4px; }
+.git-import-preview-row span { color: var(--text-description); font-size: 9px; }
+.git-import-preview-row strong, .git-import-preview-row code { color: var(--text-primary); font-size: 10px; word-break: break-all; }
+.git-import-preview-note { display: flex; align-items: flex-start; gap: 8px; padding: 10px; color: var(--text-secondary); border: 1px solid rgba(var(--warm-rgb), 0.2); border-radius: 8px; background: rgba(var(--warm-rgb), 0.08); font-size: 10px; line-height: 1.55; }
+.git-import-preview-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.git-import-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  transition: color var(--transition-hover), border-color var(--transition-hover), background var(--transition-hover);
+}
+.git-import-action-button:hover:not(:disabled) { color: var(--text-primary); border-color: var(--line-strong); background: var(--surface-elevated); }
+.git-import-action-button:disabled { opacity: 0.55; cursor: not-allowed; }
+.git-import-path-notice { padding: 10px; color: var(--text-secondary); border: 1px solid rgba(var(--accent-rgb), 0.2); border-radius: 8px; background: rgba(var(--accent-rgb), 0.08); font-size: 10px; line-height: 1.55; }
+.onboarding-overlay { position: fixed; inset: 0; z-index: 40; display: grid; place-items: center; padding: 28px; background: var(--overlay); }
+.onboarding-dialog { width: min(560px, 94vw); padding: 22px; border: 1px solid var(--line-strong); border-radius: 14px; background: var(--surface-modal); box-shadow: var(--shadow-modal); }
+.onboarding-header h2 { margin: 6px 0 0; font-size: 20px; color: var(--text-primary); }
+.onboarding-body { display: grid; gap: 14px; margin-top: 16px; color: var(--text-description); font-size: 11px; line-height: 1.7; }
+.onboarding-path-card { display: grid; gap: 6px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-hover); }
+.onboarding-path-card strong { color: var(--text-primary); font-size: 11px; }
+.onboarding-path-card small { color: var(--text-description); font-size: 9px; line-height: 1.5; }
+.onboarding-points { margin: 0; padding-left: 18px; color: var(--text-description); font-size: 10px; line-height: 1.6; }
+.onboarding-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
 .skill-editor-error { padding: 9px 10px; color: var(--error); border: 1px solid rgba(var(--error-rgb), 0.22); border-radius: 7px; background: rgba(var(--error-rgb), 0.06); font-size: 10px; }
 .skill-editor-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 14px 21px; border-top: 1px solid var(--line); }
 

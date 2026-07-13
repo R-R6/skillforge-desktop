@@ -1,6 +1,30 @@
 import type { ThemeSelection } from "../shared/theme";
 import type { ThemePack, ThemePackSummary } from "../shared/themePack";
-import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
+import type {
+  AppInfo,
+  ApplyPresetInput,
+  CleanUnusedClonesResult,
+  ClearProjectResult,
+  CreatePresetInput,
+  CreateSkillInput,
+  DeployProjectInput,
+  DeploymentResult,
+  FileExportResult,
+  GitImportPreview,
+  ImportExternalSkillInput,
+  OnboardingState,
+  PresetSummary,
+  ProjectScanResult,
+  ProjectSummary,
+  SettingsMap,
+  SkillCategoryCount,
+  SkillNavigationSnapshot,
+  SkillQuery,
+  SkillSummary,
+  StorageSummary,
+  UpdatePresetInput,
+  UpdateSkillInput,
+} from "../shared/types";
 
 declare global {
   interface Window {
@@ -14,6 +38,7 @@ declare global {
       deleteSkill: (skillId: string) => Promise<void>;
       importSkillsFromDirectory: () => Promise<SkillSummary[]>;
       importSkillsFromGit: (repositoryUrl: string) => Promise<SkillSummary[]>;
+      previewGitImport: (repositoryUrl: string) => Promise<GitImportPreview>;
       refreshExternalSkill: (skillId: string) => Promise<SkillSummary>;
       setSkillEnabled: (skillId: string, enabled: boolean) => Promise<SkillSummary | null>;
       setSkillTags: (skillId: string, tags: string[]) => Promise<SkillSummary | null>;
@@ -42,6 +67,16 @@ declare global {
       exportThemePackFile: (key: string) => Promise<FileExportResult | null>;
       deleteThemePack: (key: string) => Promise<void>;
       getAppInfo: () => Promise<AppInfo>;
+      getOnboardingState: () => Promise<OnboardingState>;
+      completeOnboarding: (dataDirectory?: string | null) => Promise<OnboardingState>;
+      getStorageSummary: () => Promise<StorageSummary>;
+      openStoragePath: (targetPath: string) => Promise<void>;
+      cleanUnusedSkillSourceClones: () => Promise<CleanUnusedClonesResult>;
+      chooseDataDirectory: () => Promise<string | null>;
+      chooseSkillSourcesDirectory: () => Promise<string | null>;
+      setSkillSourcesDirectory: (directoryPath: string) => Promise<string>;
+      requestDataDirectoryChange: (directoryPath: string) => Promise<{ requiresRestart: boolean; targetPath: string }>;
+      restartApp: () => Promise<void>;
       backupDatabase: () => Promise<FileExportResult | null>;
       exportData: () => Promise<FileExportResult | null>;
     };

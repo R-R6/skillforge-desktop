@@ -320,7 +320,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     <section className="project-workspace">
       <div className="section-toolbar project-toolbar">
         <div><h2>项目工作区</h2><span>将项目中已有的 Skill 收录保存到库，或从 Skill 库筛选后部署到项目。</span></div>
-        <div className="project-actions"><button className="ghost-button" onClick={() => refresh()}><RotateCw size={15} /> 刷新</button><button className="primary-button" onClick={handleAddProject}><FolderPlus size={16} /> 添加项目</button></div>
+        <div className="project-actions action-bar"><button className="ghost-button" onClick={() => refresh()}><RotateCw size={15} /> 刷新</button><span className="action-divider" aria-hidden="true" /><button className="primary-button" onClick={handleAddProject}><FolderPlus size={15} /> 添加项目</button></div>
       </div>
       {notice && <div className="notice-bar"><Check size={15} /> {notice}</div>}
       <div className="project-layout">

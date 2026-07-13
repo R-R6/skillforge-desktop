@@ -3,12 +3,13 @@ import { ArrowRight, Bot, CheckCircle2, FolderKanban, Layers, Library, Plus, Tag
 import type { PresetSummary, ProjectSummary, SkillSummary } from "../shared/types";
 
 interface DashboardWorkspaceProps {
+  refreshToken: number;
   onOpenLibrary: () => void;
   onOpenProjects: () => void;
   onOpenPresets: () => void;
 }
 
-export default function DashboardWorkspace({ onOpenLibrary, onOpenProjects, onOpenPresets }: DashboardWorkspaceProps) {
+export default function DashboardWorkspace({ refreshToken, onOpenLibrary, onOpenProjects, onOpenPresets }: DashboardWorkspaceProps) {
   const [skills, setSkills] = useState<SkillSummary[]>([]);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [presets, setPresets] = useState<PresetSummary[]>([]);
@@ -16,6 +17,7 @@ export default function DashboardWorkspace({ onOpenLibrary, onOpenProjects, onOp
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
     Promise.all([
       window.skillforge.listSkills(),
       window.skillforge.listProjects(),
@@ -29,7 +31,7 @@ export default function DashboardWorkspace({ onOpenLibrary, onOpenProjects, onOp
       if (!cancelled) setLoading(false);
     });
     return () => { cancelled = true; };
-  }, []);
+  }, [refreshToken]);
 
   const enabledSkills = skills.filter((skill) => skill.enabled !== false).length;
   const boundProjects = projects.filter((project) => project.skillCount > 0).length;
@@ -38,7 +40,9 @@ export default function DashboardWorkspace({ onOpenLibrary, onOpenProjects, onOp
   return <section className="dashboard-workspace">
     <div className="dashboard-intro">
       <div><span className="eyebrow">工作区概览</span><h2>今天从管理你的 AI 能力开始</h2><p>SkillForge 负责保存 Skill，再将选中的能力部署到具体项目与编码 Agent。</p></div>
-      <button className="primary-button" onClick={onOpenLibrary}><Library size={16} /> 浏览 Skill 库</button>
+      <div className="action-bar">
+        <button className="primary-button" onClick={onOpenLibrary}><Library size={15} /> 浏览 Skill 库</button>
+      </div>
     </div>
 
     <div className="dashboard-metrics">

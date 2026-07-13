@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Archive, Check, Download, FolderCog, Save, ShieldCheck } from "lucide-react";
 import type { AppInfo, SettingsMap } from "../shared/types";
+import StorageSettingsCard from "./StorageSettingsCard";
 
 const defaults: SettingsMap = {
   proxyHost: "127.0.0.1",
@@ -55,7 +56,8 @@ export default function SettingsWorkspace() {
         <div className="settings-card"><div className="settings-card-heading"><FolderCog size={18} /><div><strong>常规设置</strong><span>项目扫描与自动化行为</span></div></div><div className="settings-form"><label className="toggle-row"><span><strong>打开项目管理时自动扫描</strong><small>进入项目管理并选中项目后，自动识别项目内已有的 Skill</small></span><input type="checkbox" checked={settings.autoScan === "on"} onChange={(event) => update("autoScan", event.target.checked ? "on" : "off")} /></label></div><p className="settings-hint">主题、强调色与密度请前往侧边栏「外观」页面管理。</p></div>
         <div className="settings-card"><div className="settings-card-heading"><ShieldCheck size={18} /><div><strong>网络代理</strong><span>用于 GitHub 导入与外部 Skill 来源刷新</span></div></div><div className="settings-form proxy-form"><label>代理主机<input value={settings.proxyHost} onChange={(event) => update("proxyHost", event.target.value)} placeholder="127.0.0.1" /></label><label>端口<input value={settings.proxyPort} onChange={(event) => update("proxyPort", event.target.value)} placeholder="7897" /></label></div><p className="settings-hint">默认使用 Clash 常见端口 127.0.0.1:7897；GitHub 导入和来源刷新会使用这里保存的代理。</p></div>
         <div className="settings-card"><div className="settings-card-heading"><Archive size={18} /><div><strong>备份与导出</strong><span>保护本地 Skill 与预设数据</span></div></div><div className="settings-actions"><button className="outline-button" onClick={backup}><Archive size={15} /> 备份 SQLite 数据库</button><button className="outline-button" onClick={exportData}><Download size={15} /> 导出 JSON 数据</button></div></div>
-        <div className="settings-card"><div className="settings-card-heading"><FolderCog size={18} /><div><strong>应用信息</strong><span>当前运行环境</span></div></div>{appInfo ? <div className="info-list"><div><span>版本</span><strong>{appInfo.version}</strong></div><div><span>平台</span><strong>{appInfo.platform}</strong></div><div><span>数据库</span><code>{appInfo.databasePath}</code></div><div><span>数据目录</span><code>{appInfo.userDataPath}</code></div></div> : <div className="panel-empty">读取应用信息中…</div>}</div>
+        <div className="settings-card"><div className="settings-card-heading"><FolderCog size={18} /><div><strong>应用信息</strong><span>当前运行环境</span></div></div>{appInfo ? <div className="info-list"><div><span>版本</span><strong>{appInfo.version}</strong></div><div><span>平台</span><strong>{appInfo.platform}</strong></div><div><span>数据目录</span><code>{appInfo.userDataPath}</code></div><div><span>GitHub 克隆目录</span><code>{appInfo.skillSourcesPath}</code></div><div><span>数据库</span><code>{appInfo.databasePath}</code></div><div><span>引导配置</span><code>{appInfo.bootstrapPath}</code></div></div> : <div className="panel-empty">读取应用信息中…</div>}</div>
+        <StorageSettingsCard />
       </div>
     </section>
   );

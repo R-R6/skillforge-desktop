@@ -10,17 +10,17 @@ import {
   Settings,
   Sparkles,
   Tags,
-  Upload,
   Wrench,
 } from "lucide-react";
 import AppearanceWorkspace from "./AppearanceWorkspace";
 import DashboardWorkspace from "./DashboardWorkspace";
+import OnboardingDialog from "./OnboardingDialog";
 import ProjectWorkspace from "./ProjectWorkspace";
 import PresetWorkspace from "./PresetWorkspace";
 import SettingsWorkspace from "./SettingsWorkspace";
 import SkillLibraryWorkspace from "./SkillLibraryWorkspace";
 import SyncWorkspace from "./SyncWorkspace";
-import type { SkillNavigationSnapshot } from "../shared/types";
+import type { OnboardingState, SkillNavigationSnapshot } from "../shared/types";
 import { getNavigationBreadcrumbLabel, NAV_ALL } from "../shared/skillNavigation";
 import { handleSystemThemeChanged, loadAndApplyThemePreferences } from "./theme/theme-manager";
 
@@ -36,9 +36,6 @@ const navTitles: Record<string, string> = {
   settings: "设置",
 };
 
-/** 顶栏「导入 Skill」仅出现在以 Skill 库为核心的工作流页面 */
-const SHOW_IMPORT_SKILL_NAV = new Set(["dashboard", "skill-library"]);
-
 function App() {
   const [activeNav, setActiveNav] = useState("skill-library");
   const [libraryNavigationKey, setLibraryNavigationKey] = useState(NAV_ALL);
@@ -48,6 +45,8 @@ function App() {
   const [totalSkillCount, setTotalSkillCount] = useState(0);
   const [libraryRefreshToken, setLibraryRefreshToken] = useState(0);
   const [pendingProjectSkillIds, setPendingProjectSkillIds] = useState<string[]>([]);
+  const [onboardingState, setOnboardingState] = useState<OnboardingState | null>(null);
+  const [onboardingReady, setOnboardingReady] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -64,19 +63,26 @@ function App() {
   }, [activeNav, libraryRefreshToken]);
 
   useEffect(() => {
+    window.skillforge.getOnboardingState()
+      .then((state) => {
+        setOnboardingState(state);
+        setOnboardingReady(true);
+      })
+      .catch(() => setOnboardingReady(true));
+  }, []);
+
+  async function handleCompleteOnboarding(dataDirectory?: string | null) {
+    const state = await window.skillforge.completeOnboarding(dataDirectory ?? null);
+    setOnboardingState(state);
+  }
+
+  useEffect(() => {
     loadAndApplyThemePreferences().catch(() => undefined);
     const unsubscribe = window.skillforge.onSystemThemeChanged((systemDark) => {
       handleSystemThemeChanged(systemDark);
     });
     return unsubscribe;
   }, []);
-
-  async function handleImportSkill() {
-    const imported = await window.skillforge.importSkillFile();
-    if (!imported) return;
-    setActiveNav("skill-library");
-    setLibraryRefreshToken((current) => current + 1);
-  }
 
   function openSelectedSkillsInProjects(skillIds: string[]) {
     if (skillIds.length === 0) return;
@@ -138,11 +144,6 @@ function App() {
             </div>
             <h1>{navTitles[activeNav] ?? "Skill 库"}</h1>
           </div>
-          {SHOW_IMPORT_SKILL_NAV.has(activeNav) && (
-            <button className="primary-button" onClick={handleImportSkill}>
-              <Upload size={17} /> 导入 Skill 文件
-            </button>
-          )}
         </header>
 
         {showMarketingSections && (
@@ -153,8 +154,11 @@ function App() {
                 <h2>把专业能力，装进每一个编码 Agent。</h2>
                 <p>集中管理 Skill，再将选中的能力部署到具体项目与编码 Agent。</p>
               </div>
-              <div className="agent-stack">
-                {agents.map((agent) => <span key={agent} className="agent-pill"><Bot size={14} /> {agent}</span>)}
+              <div className="hero-platforms">
+                <span className="hero-platforms-label">支持编码 Agent</span>
+                <div className="agent-stack">
+                  {agents.map((agent) => <span key={agent} className="agent-pill"><Bot size={14} /> {agent}</span>)}
+                </div>
               </div>
             </section>
 
@@ -170,6 +174,7 @@ function App() {
 
         {activeNav === "dashboard" ? (
           <DashboardWorkspace
+            refreshToken={libraryRefreshToken}
             onOpenLibrary={() => setActiveNav("skill-library")}
             onOpenProjects={() => setActiveNav("projects")}
             onOpenPresets={() => setActiveNav("presets")}
@@ -196,6 +201,9 @@ function App() {
           />
         )}
       </main>
+      {onboardingReady && onboardingState && !onboardingState.completed && (
+        <OnboardingDialog state={onboardingState} onComplete={handleCompleteOnboarding} />
+      )}
     </div>
   );
 }

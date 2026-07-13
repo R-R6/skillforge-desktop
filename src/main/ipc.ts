@@ -1,13 +1,23 @@
 import { app, dialog, ipcMain } from "electron";
 import fs from "node:fs";
 import path from "node:path";
-import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getSettings, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkillCategories, listSkillNavigation, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
+import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getSettings, getSkillSourcesDirectory, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkillCategories, listSkillNavigation, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
 import { clearProjectSkills, deployProject } from "./deployment";
 import { importProjectSkill, loadDiscoveredProjectSkills, scanProject } from "./scanner";
 import { applyPresetToProject } from "./presets";
 import { logInfo } from "./logger";
 import { applyWindowBackground, getSystemPrefersDark, syncNativeThemeSource } from "./theme";
 import { deleteUserThemePack, exportThemePackJson, getThemePack, importThemePackFromJson, listThemePacks } from "./themePacks";
+import { completeOnboarding, getBootstrapFilePath, getDefaultElectronUserDataPath } from "./bootstrap";
+import {
+  cleanUnusedSkillSourceClones,
+  getOnboardingState,
+  getStorageSummary,
+  openStoragePath,
+  previewGitImport,
+  requestDataDirectoryChange,
+  setSkillSourcesDirectory,
+} from "./storage";
 import type { ThemeSelection } from "../shared/theme";
 import type { ApplyPresetInput, CreatePresetInput, CreateSkillInput, DeployProjectInput, SkillQuery, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 
@@ -36,6 +46,7 @@ export function registerIpcHandlers() {
     return importSkillsFromDirectory(result.filePaths[0]);
   });
   ipcMain.handle("skills:import-git", (_event, repositoryUrl: string) => importSkillsFromGit(repositoryUrl));
+  ipcMain.handle("skills:preview-git-import", (_event, repositoryUrl: string) => previewGitImport(repositoryUrl));
   ipcMain.handle("skills:refresh-external", (_event, skillId: string) => refreshExternalSkill(skillId));
   ipcMain.handle("skills:set-enabled", (_event, skillId: string, enabled: boolean) => setSkillEnabled(skillId, enabled));
   ipcMain.handle("skills:set-tags", (_event, skillId: string, tags: string[]) => setSkillTags(skillId, tags));
@@ -103,7 +114,45 @@ export function registerIpcHandlers() {
     userDataPath: app.getPath("userData"),
     databasePath: getDatabasePath(),
     platform: process.platform,
+    defaultUserDataPath: getDefaultElectronUserDataPath(),
+    skillSourcesPath: getSkillSourcesDirectory(),
+    bootstrapPath: getBootstrapFilePath(),
   }));
+  ipcMain.handle("storage:onboarding-state", () => getOnboardingState());
+  ipcMain.handle("storage:complete-onboarding", (_event, dataDirectory?: string | null) => {
+    const config = completeOnboarding({ dataDirectory: dataDirectory ?? null });
+    logInfo("onboarding_completed", { dataDirectory: config.dataDirectory });
+    return getOnboardingState();
+  });
+  ipcMain.handle("storage:summary", () => getStorageSummary());
+  ipcMain.handle("storage:open-path", async (_event, targetPath: string) => openStoragePath(targetPath));
+  ipcMain.handle("storage:clean-unused-clones", () => {
+    const result = cleanUnusedSkillSourceClones();
+    logInfo("storage_clean_unused_clones", { removed: result.removed.length, freedBytes: result.freedBytes });
+    return result;
+  });
+  ipcMain.handle("storage:choose-data-directory", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "选择 SkillForge 数据目录",
+      properties: ["openDirectory", "createDirectory"],
+    });
+    if (result.canceled || !result.filePaths[0]) return null;
+    return result.filePaths[0];
+  });
+  ipcMain.handle("storage:choose-skill-sources-directory", async () => {
+    const result = await dialog.showOpenDialog({
+      title: "选择 GitHub 克隆保存目录",
+      properties: ["openDirectory", "createDirectory"],
+    });
+    if (result.canceled || !result.filePaths[0]) return null;
+    return setSkillSourcesDirectory(result.filePaths[0]);
+  });
+  ipcMain.handle("storage:set-skill-sources-directory", (_event, directoryPath: string) => setSkillSourcesDirectory(directoryPath));
+  ipcMain.handle("storage:request-data-directory-change", (_event, directoryPath: string) => requestDataDirectoryChange(directoryPath));
+  ipcMain.handle("storage:restart-app", () => {
+    app.relaunch();
+    app.exit(0);
+  });
   ipcMain.handle("settings:backup", async () => {
     const result = await dialog.showSaveDialog({
       title: "备份 SkillForge 数据库",

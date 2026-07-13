@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  ChevronDown,
   ChevronRight,
   FolderOpen,
   Github,
@@ -38,14 +39,34 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
   const [skillEditorOpen, setSkillEditorOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<SkillSummary | null>(null);
   const [gitImportOpen, setGitImportOpen] = useState(false);
+  const [importMenuOpen, setImportMenuOpen] = useState(false);
   const [searchShortcutLabel, setSearchShortcutLabel] = useState("Ctrl+K");
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const importMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     window.skillforge.getAppInfo()
       .then((info) => setSearchShortcutLabel(info.platform === "darwin" ? "⌘K" : "Ctrl+K"))
       .catch(() => undefined);
   }, []);
+
+  useEffect(() => {
+    if (!importMenuOpen) return;
+    function handlePointerDown(event: MouseEvent) {
+      if (!importMenuRef.current?.contains(event.target as Node)) {
+        setImportMenuOpen(false);
+      }
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setImportMenuOpen(false);
+    }
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [importMenuOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,44 +226,64 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
   const totalSkillCount = navigation?.totalCount ?? 0;
 
   return (
-    <section className="library-section">
-      <div className="section-toolbar">
+    <section className="library-workspace">
+      <div className="section-toolbar project-toolbar">
         <div>
-          <h2>Skill 库</h2>
+          <h2>浏览与管理</h2>
           <span>
             {loading
-              ? "正在读取…"
+              ? "正在读取本地 Skill 库…"
               : `${skills.length} 个结果 · 共 ${totalSkillCount} 个 Skill · 内置 ${(navigation?.totalCount ?? 0) - (navigation?.externalTotal ?? 0)} · 收录 ${navigation?.externalTotal ?? 0}`}
           </span>
         </div>
-        <label className="search-box">
-          <Search size={16} />
-          <input
-            ref={searchInputRef}
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="@ 搜索名称、描述或分类"
-          />
-          <kbd>{searchShortcutLabel}</kbd>
-        </label>
-        <button
-          className={bulkMode ? "ghost-button bulk-mode-active" : "ghost-button"}
-          onClick={() => { setBulkMode((current) => !current); setBulkSelectedIds([]); }}
-        >
-          <Tags size={15} /> {bulkMode ? "退出批量" : "批量操作"}
-        </button>
-        <button className="primary-button compact-button" onClick={() => { setEditingSkill(null); setSkillEditorOpen(true); }}>
-          <Plus size={15} /> 新建 Skill
-        </button>
-        <button className="ghost-button" onClick={handleImportSkillFile}>
-          <Upload size={15} /> 导入 Skill 文件
-        </button>
-        <button className="ghost-button" onClick={handleImportSkillDirectory}>
-          <FolderOpen size={15} /> 导入目录
-        </button>
-        <button className="ghost-button" onClick={() => setGitImportOpen(true)}>
-          <Github size={15} /> GitHub 导入
-        </button>
+        <div className="project-actions action-bar">
+          <button
+            className={bulkMode ? "ghost-button bulk-mode-active" : "ghost-button"}
+            onClick={() => { setBulkMode((current) => !current); setBulkSelectedIds([]); }}
+          >
+            <Tags size={15} /> {bulkMode ? "退出批量" : "批量操作"}
+          </button>
+          <div className="import-menu-anchor" ref={importMenuRef}>
+            <button
+              type="button"
+              className="outline-button"
+              aria-expanded={importMenuOpen}
+              aria-haspopup="menu"
+              onClick={() => setImportMenuOpen((current) => !current)}
+            >
+              <Upload size={15} /> 导入 <ChevronDown size={14} className={importMenuOpen ? "menu-chevron open" : "menu-chevron"} />
+            </button>
+            {importMenuOpen && (
+              <div className="import-menu" role="menu">
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setImportMenuOpen(false); void handleImportSkillFile(); }}
+                >
+                  <Upload size={14} /> 导入 Skill 文件
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setImportMenuOpen(false); void handleImportSkillDirectory(); }}
+                >
+                  <FolderOpen size={14} /> 导入目录
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => { setImportMenuOpen(false); setGitImportOpen(true); }}
+                >
+                  <Github size={14} /> GitHub 导入
+                </button>
+              </div>
+            )}
+          </div>
+          <span className="action-divider" aria-hidden="true" />
+          <button className="primary-button" onClick={() => { setEditingSkill(null); setSkillEditorOpen(true); }}>
+            <Plus size={15} /> 新建 Skill
+          </button>
+        </div>
       </div>
 
       {bulkMode && (
@@ -277,6 +318,20 @@ export default function SkillLibraryWorkspace({ refreshToken, onNavigationChange
         />
 
         <div className="skill-list-panel">
+          <div className="library-list-heading">
+            <span>Skill 列表</span>
+            <b>{loading ? "…" : skills.length}</b>
+            <label className="search-box library-search">
+              <Search size={16} />
+              <input
+                ref={searchInputRef}
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="@ 搜索名称、描述或分类"
+              />
+              <kbd>{searchShortcutLabel}</kbd>
+            </label>
+          </div>
           {loading ? (
             <div className="empty-state">正在初始化本地 Skill 数据库…</div>
           ) : skills.length === 0 ? (

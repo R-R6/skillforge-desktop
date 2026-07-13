@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import type { AgentTool, CreatePresetInput, CreateSkillInput, ExternalSkillRecord, PresetSummary, ProjectSummary, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
 import { buildSkillNavigation, matchesNavigationKey, NAV_ALL } from "../shared/skillNavigation";
 import { collectSkillMarkdownFiles, parseSkillMetadata } from "../shared/skillDiscovery";
+import { parseGitHubImportUrl, getGitImportDirectory } from "../shared/gitImport";
+import { SETTING_SKILL_SOURCES_DIRECTORY } from "../shared/storage";
 
 let database: Database.Database | null = null;
 let databasePath: string | null = null;
@@ -675,36 +677,12 @@ export function importSkillsFromDirectory(directoryPath: string, sourceUrl?: str
 }
 
 export async function importSkillsFromGit(repositoryUrl: string): Promise<SkillSummary[]> {
-  const normalizedUrl = repositoryUrl.trim();
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(normalizedUrl);
-  } catch {
-    throw new Error("请输入有效的 GitHub HTTPS 仓库地址");
-  }
-  if (parsedUrl.protocol !== "https:" || !["github.com", "www.github.com"].includes(parsedUrl.hostname.toLowerCase()) || parsedUrl.username || parsedUrl.password) {
-    throw new Error("目前只支持不带账号信息的 GitHub HTTPS 地址");
-  }
-  const segments = parsedUrl.pathname.split("/").filter(Boolean).map((segment) => decodeURIComponent(segment));
-  if (segments.length < 2) throw new Error("GitHub 地址需要包含 owner 和仓库名");
-  const owner = segments[0];
-  const repository = segments[1].replace(/\.git$/i, "");
-  let cloneUrl = normalizedUrl;
-  let branch: string | undefined;
-  let subPath: string[] = [];
-  if (segments.length > 2) {
-    if (segments[2].toLowerCase() !== "tree" || !segments[3]) throw new Error("GitHub 地址只支持仓库根目录或 /tree/分支/子目录格式");
-    branch = segments[3];
-    subPath = segments.slice(4);
-    cloneUrl = `https://github.com/${owner}/${repository}.git`;
-  }
-
-  const sourceId = crypto.createHash("sha1").update(normalizedUrl).digest("hex");
-  const sourceDirectory = path.join(app.getPath("userData"), "skill-sources", sourceId);
+  const plan = parseGitHubImportUrl(repositoryUrl);
+  const sourceDirectory = getGitImportDirectory(plan.sourceId, getSkillSourcesDirectory());
   if (!fs.existsSync(sourceDirectory)) {
     fs.mkdirSync(path.dirname(sourceDirectory), { recursive: true });
     try {
-      const cloneArguments = ["clone", "--depth", "1", "--no-tags", "--single-branch", ...(branch ? ["--branch", branch] : []), cloneUrl, sourceDirectory];
+      const cloneArguments = ["clone", "--depth", "1", "--no-tags", "--single-branch", ...(plan.branch ? ["--branch", plan.branch] : []), plan.cloneUrl, sourceDirectory];
       await execFileAsync("git", cloneArguments, gitCommandOptions());
     } catch (error) {
       const detail = error && typeof error === "object" && "stderr" in error ? String(error.stderr).trim() : "";
@@ -714,11 +692,11 @@ export async function importSkillsFromGit(repositoryUrl: string): Promise<SkillS
     throw new Error("应用保存的 GitHub 来源目录不是有效 Git 仓库");
   }
 
-  const importDirectory = path.resolve(sourceDirectory, ...subPath);
+  const importDirectory = path.resolve(sourceDirectory, ...plan.subPath);
   const relativeImportDirectory = path.relative(sourceDirectory, importDirectory);
   if (relativeImportDirectory.startsWith("..") || path.isAbsolute(relativeImportDirectory)) throw new Error("GitHub Skill 子目录路径无效");
   if (!fs.existsSync(importDirectory) || !fs.statSync(importDirectory).isDirectory()) throw new Error("GitHub 指定的 Skill 子目录不存在");
-  return importSkillsFromDirectory(importDirectory, normalizedUrl);
+  return importSkillsFromDirectory(importDirectory, plan.normalizedUrl);
 }
 
 function presetRowToSummary(row: {
@@ -821,6 +799,20 @@ export function updatePreset(input: UpdatePresetInput): PresetSummary {
 export function deletePreset(presetId: string) {
   if (!database) throw new Error("Database is not initialized");
   database.prepare("DELETE FROM presets WHERE id = ?").run(presetId);
+}
+
+export function getSkillSourcesDirectory(): string {
+  if (!database) return path.join(app.getPath("userData"), "skill-sources");
+  const configured = getSettings()[SETTING_SKILL_SOURCES_DIRECTORY]?.trim();
+  if (configured) return path.resolve(configured);
+  return path.join(app.getPath("userData"), "skill-sources");
+}
+
+export function listSkillSourceReferences(): Array<{ sourcePath: string | null; sourceUrl: string | null }> {
+  if (!database) return [];
+  return database
+    .prepare("SELECT source_path AS sourcePath, source_url AS sourceUrl FROM skills WHERE source_path IS NOT NULL OR source_url IS NOT NULL")
+    .all() as Array<{ sourcePath: string | null; sourceUrl: string | null }>;
 }
 
 export function getDatabasePath() {

@@ -129,7 +129,19 @@ export interface AppInfo {
   userDataPath: string;
   databasePath: string;
   platform: string;
+  defaultUserDataPath: string;
+  skillSourcesPath: string;
+  bootstrapPath: string;
 }
+
+export type {
+  CleanUnusedClonesResult,
+  GitImportPreview,
+  OnboardingState,
+  SkillSourceCloneSummary,
+  StorageEntrySummary,
+  StorageSummary,
+} from "./storage";
 
 export interface FileExportResult {
   filePath: string;

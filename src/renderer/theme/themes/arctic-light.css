@@ -48,6 +48,7 @@
   --text-secondary: #475569;
   --text-description: #64748b;
   --text-disabled: #94a3b8;
+  --text-on-brand: #ffffff;
   --text: var(--text-primary);
   --muted: var(--text-description);
 
