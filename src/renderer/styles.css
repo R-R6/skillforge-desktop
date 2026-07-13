@@ -829,6 +829,14 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 .project-panel-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; }
 .project-filter-toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--text-description); font-size: 10px; white-space: nowrap; }
 .project-panel-hint { margin: 0 0 10px; color: var(--text-description); font-size: 10px; line-height: 1.5; }
+.deploy-hints { display: flex; align-items: flex-start; gap: 9px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: rgba(var(--cyan-rgb), 0.04); color: var(--text-description); font-size: 10px; line-height: 1.65; }
+.deploy-hints svg { flex: 0 0 auto; margin-top: 1px; color: var(--cyan); }
+.deploy-hints-copy p { margin: 0; }
+.deploy-hints-copy p + p { margin-top: 6px; }
+.deploy-hints strong { color: var(--text-secondary); font-weight: 600; }
+.deploy-hints code { color: var(--text-secondary); font-family: ui-monospace, monospace; font-size: 9px; }
+.deploy-hint-emphasis { color: var(--accent-ai); }
+.sync-tool-note { display: block; margin-top: 5px; color: var(--accent-ai); font-size: 9px; font-style: normal; line-height: 1.45; }
 .project-skill-groups { display: grid; gap: 8px; flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px; }
 .project-skill-group { border: 1px solid var(--line); border-radius: 8px; background: var(--surface-hover); overflow: hidden; }
 .project-skill-group-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; }

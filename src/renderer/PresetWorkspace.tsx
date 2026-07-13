@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Check, Plus, Rocket, Trash2 } from "lucide-react";
 import type { AgentTool, PresetSummary, ProjectSummary, SkillSummary } from "../shared/types";
+import { buildDeploySuccessNotice, DeployScopeHints } from "./deployHints";
 
 const toolOptions: Array<{ id: AgentTool; label: string }> = [
   { id: "codex", label: "Codex" },
@@ -86,7 +87,7 @@ export default function PresetWorkspace() {
       return;
     }
     const result = await window.skillforge.applyPreset({ presetId: selectedPresetId, projectId: targetProjectId });
-    setNotice(`已将预设部署到 ${result.project.name}，生成 ${result.files.length} 个文件`);
+    setNotice(buildDeploySuccessNotice(result.files.length, result.project.name, presets.find((item) => item.id === selectedPresetId)?.tools ?? tools));
   }
 
   function toggleSkill(id: string) {
@@ -112,7 +113,7 @@ export default function PresetWorkspace() {
         <div className="preset-editor panel-box">
           <div className="preset-editor-head"><div><span className="eyebrow">预设编辑</span><h2>{selectedPresetId ? "编辑预设配置" : "创建新的预设"}</h2></div>{selectedPresetId && <button className="danger-button" onClick={handleDelete}><Trash2 size={14} /> 删除</button>}</div>
           <div className="preset-form-row"><label>名称<input value={name} onChange={(event) => setName(event.target.value)} placeholder="例如：前端项目全家桶" /></label><label>说明<input value={description} onChange={(event) => setDescription(event.target.value)} placeholder="这个预设适合什么项目" /></label></div>
-          <div className="workspace-block"><div className="workspace-block-heading"><strong>目标 Agent</strong><span>{tools.length} 个已选择</span></div><div className="preset-tools">{toolOptions.map((tool) => <button key={tool.id} className={tools.includes(tool.id) ? "tool-select selected" : "tool-select"} onClick={() => toggleTool(tool.id)}><span className="tool-check">{tools.includes(tool.id) && <Check size={12} />}</span><strong>{tool.label}</strong></button>)}</div></div>
+          <div className="workspace-block"><div className="workspace-block-heading"><strong>目标 Agent</strong><span>{tools.length} 个已选择</span></div><div className="preset-tools">{toolOptions.map((tool) => <button key={tool.id} className={tools.includes(tool.id) ? "tool-select selected" : "tool-select"} onClick={() => toggleTool(tool.id)}><span className="tool-check">{tools.includes(tool.id) && <Check size={12} />}</span><strong>{tool.label}</strong></button>)}</div><DeployScopeHints selectedTools={tools} /></div>
           <div className="workspace-block"><div className="workspace-block-heading"><strong>包含 Skill</strong><span>{skillIds.length} / {skills.length} 个已选择</span></div><div className="workspace-skill-list">{skills.map((skill) => <button key={skill.id} className={skillIds.includes(skill.id) ? "workspace-skill selected" : "workspace-skill"} onClick={() => toggleSkill(skill.id)}><span className="skill-check">{skillIds.includes(skill.id) && <Check size={12} />}</span><span><strong>{skill.name}</strong><small>{skill.description}</small></span></button>)}</div></div>
           <div className="preset-apply"><label>部署到项目<select value={targetProjectId} onChange={(event) => setTargetProjectId(event.target.value)}><option value="">选择项目</option>{projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}</select></label><div className="preset-apply-actions">{selectedPresetId && <button className="outline-button" onClick={handleCreate}><Check size={15} /> 保存修改</button>}<button className="deploy-button" onClick={selectedPresetId ? handleApply : handleCreate}>{selectedPresetId ? <><Rocket size={15} /> 部署到项目</> : <><Check size={15} /> 保存预设</>}</button></div></div>
         </div>

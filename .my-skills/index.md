@@ -2,7 +2,7 @@
 
 本目录由 SkillForge Desktop 管理，请通过应用更新 Skill。
 
-- [UI 设计师 · 设计创意](./skills/UI 设计师 · 设计创意.md) - 视觉设计、组件库与设计系统专家
-- [UI 设计师 · 设计部门](./skills/UI 设计师 · 设计部门.md) - 视觉设计、组件库与设计系统专家
-- [UX 架构师](./skills/UX 架构师.md) - 规划产品信息架构、体验框架、布局系统、前端 CSS 架构和设计交付基础。
-- [用户体验研究员](./skills/用户体验研究员.md) - 用户测试、行为分析与可用性研究专家
+- [brainstorming](./skills/brainstorming.md) - You MUST use this before any creative work - creating features, building components, adding functionality, or modifying behavior. Explores user intent, requirements and design before implementation.
+- [code-reviewer](./skills/code-reviewer.md) - 暂无描述
+- [cursor-commander](./skills/cursor-commander.md) - Use when the user wants Codex/GPT to act as a commander that drafts complete, copy-paste-ready prompts for Cursor or another coding agent to execute. Use for manual multi-agent delegation, prompt-only handoffs, code review prompts, bug-fix prompts, staged reconnaissance/implementation/review prompts, "指挥官", "Cursor 士兵", "让 Cursor 干活", "写完整提示词", or asking Codex to plan while Cursor implements. This skill outputs execution prompts by default and does not implement code unless the user explicitly asks.
+- [ui-ux-pro-max](./skills/ui-ux-pro-max.md) - UI/UX design intelligence for web and mobile. Includes 50+ styles, 161 color palettes, 57 font pairings, 161 product types, 99 UX guidelines, and 25 chart types across 10 stacks (React, Next.js, Vue, Svelte, SwiftUI, React Native, Flutter, Tailwind, shadcn/ui, and HTML/CSS). Actions: plan, build, create, design, implement, review, fix, improve, optimize, enhance, refactor, and check UI/UX code. Projects: website, landing page, dashboard, admin panel, e-commerce, SaaS, portfolio, blog, and mobile app. Elements: button, modal, navbar, sidebar, card, table, form, and chart. Styles: glassmorphism, claymorphism, minimalism, brutalism, neumorphism, bento grid, dark mode, responsive, skeuomorphism, and flat design. Topics: color systems, accessibility, animation, layout, typography, font pairing, spacing, interaction states, shadow, and gradient. Integrations: shadcn/ui MCP for component search and examples.

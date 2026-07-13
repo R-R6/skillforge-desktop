@@ -6,9 +6,15 @@ alwaysApply: false
 
 ## SkillForge Desktop
 
-以下 Skill 已绑定到当前项目：
-- @.my-skills/skills/UI 设计师 · 设计创意.md
-- @.my-skills/skills/UI 设计师 · 设计部门.md
-- @.my-skills/skills/UX 架构师.md
-- @.my-skills/skills/用户体验研究员.md
+以下 Skill 已绑定到当前项目，可直接使用斜杠命令调用：
+- /brainstorming
+- /code-reviewer
+- /cursor-commander
+- /ui-ux-pro-max
+
+源文件：
+- @.my-skills/skills/brainstorming.md
+- @.my-skills/skills/code-reviewer.md
+- @.my-skills/skills/cursor-commander.md
+- @.my-skills/skills/ui-ux-pro-max.md
 <!-- SKILLFORGE:END -->

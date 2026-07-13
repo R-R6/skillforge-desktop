@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, ChevronRight, Download, FolderPlus, FolderKanban, Rocket, RotateCw, Search } from "lucide-react";
 import type { AgentTool, ExternalSkillRecord, ProjectSummary, SkillSummary } from "../shared/types";
 import { getTopCategory, groupExternalSkills, groupLibrarySkills, isSkillCompatibleWithTools } from "./projectSkillGroups";
+import { buildDeploySuccessNotice, DeployScopeHints } from "./deployHints";
 
 const toolOptions: Array<{ id: AgentTool; label: string; description: string }> = [
-  { id: "codex", label: "Codex", description: "AGENTS.md" },
-  { id: "cursor", label: "Cursor", description: ".cursor/skills · .cursor/rules" },
-  { id: "claude-code", label: "Claude Code", description: "CLAUDE.md" },
-  { id: "hermes", label: "Hermes", description: "HERMES.md" },
+  { id: "codex", label: "Codex", description: ".codex/skills（项目级）" },
+  { id: "cursor", label: "Cursor", description: ".cursor/skills（项目级）" },
+  { id: "claude-code", label: "Claude Code", description: ".claude/skills（项目级，桌面端需重启）" },
+  { id: "hermes", label: "Hermes", description: ".agents/skills（项目级，Desktop 需重启）" },
 ];
 
 const toolLabels: Record<AgentTool, string> = {
@@ -200,7 +201,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     });
     setProjects((current) => current.map((project) => (project.id === result.project.id ? result.project : project)));
     setSelectedProject(result.project);
-    setNotice(`已部署 ${result.files.length} 个文件到 ${result.project.name}`);
+    setNotice(buildDeploySuccessNotice(result.files.length, result.project.name, selectedTools));
   }
 
   async function handleScan() {
@@ -362,6 +363,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
             <div className="workspace-block workspace-block-compact">
               <div className="workspace-block-heading"><strong>目标 Agent</strong><span>{selectedTools.length} 个已选择</span></div>
               <div className="tool-select-grid">{toolOptions.map((tool) => <button key={tool.id} className={selectedTools.includes(tool.id) ? "tool-select selected" : "tool-select"} onClick={() => toggleTool(tool.id)}><span className="tool-check">{selectedTools.includes(tool.id) && <Check size={12} />}</span><span><strong>{tool.label}</strong><small>{tool.description}</small></span></button>)}</div>
+              <DeployScopeHints selectedTools={selectedTools} />
             </div>
 
             <div className="project-workspace-tabs">
@@ -430,7 +432,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                     </button>
                   </div>
                 </div>
-                <p className="project-panel-hint">勾选后点击右上角“部署到项目”。目标工具不支持的 Skill 会标记为不可用。</p>
+                <p className="project-panel-hint">勾选后点击右上角“部署到项目”。部署写入项目级 Skill 目录，可在该项目中用斜杠命令调用。</p>
                 {deploySkillGroups.length === 0 ? <div className="scan-empty">没有匹配的 Skill。</div> : <div className="project-skill-groups">{deploySkillGroups.map((group) => {
                   const expanded = expandedDeployGroups.includes(group.category);
                   const selectedCount = group.skills.filter((skill) => deploySkillIds.includes(skill.id)).length;

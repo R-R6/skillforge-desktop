@@ -2,6 +2,8 @@ node_modules/
 out/
 release/
 dist/
+release-fresh/
+release-fresh-build/
 .vite/
 *.db
 *.db-shm
