@@ -7,6 +7,7 @@
 | 文档 | 说明 |
 |------|------|
 | [build-and-release.md](./build-and-release.md) | 开发、编译、测试与 Windows 安装包发布 |
+| [macOS 适配方案](./superpowers/specs/2026-07-15-macos-adaptation-design.md) | 双架构未公证 DMG、运行时适配与 GitHub Release 落地设计 |
 | [theme-system/design-philosophy.md](./theme-system/design-philosophy.md) | **设计宪法** — Dark/Light 双人格、Arctic 完整规范、决策对照表 |
 | [theme-system/vision.md](./theme-system/vision.md) | Theme System 1.0 产品愿景与体系结构 |
 | [theme-system/architecture.md](./theme-system/architecture.md) | 技术架构：Token 分层与 Arctic Token 参考值 |
