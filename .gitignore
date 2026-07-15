@@ -11,3 +11,16 @@ release-fresh-build/
 *.log
 .DS_Store
 
+# SkillForge 部署产物（由应用「部署到项目」生成，非应用源码）
+.my-skills/
+.agents/skills/
+.codex/skills/
+.claude/skills/
+.cursor/skills/
+.cursor/rules/skillforge-skills.mdc
+AGENTS.md
+CLAUDE.md
+HERMES.md
+
+# Hermes 文档离线快照（本地参考用，非项目源码）
+.cursor/hermes-*.html
