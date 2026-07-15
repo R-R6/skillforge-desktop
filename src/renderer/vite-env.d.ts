@@ -50,6 +50,7 @@ declare global {
       clearProjectSkills: (projectId: string) => Promise<ClearProjectResult>;
       scanProject: (projectId: string) => Promise<ProjectScanResult>;
       getDiscoveredProjectSkills: (projectId: string) => Promise<ProjectScanResult>;
+      getProjectBoundSkillIds: (projectId: string) => Promise<string[]>;
       importExternalSkill: (input: ImportExternalSkillInput) => Promise<SkillSummary>;
       listPresets: () => Promise<PresetSummary[]>;
       createPreset: (input: CreatePresetInput) => Promise<PresetSummary>;

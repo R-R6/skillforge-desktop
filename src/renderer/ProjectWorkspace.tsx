@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Check, ChevronRight, Download, FolderPlus, FolderKanban, Rocket, RotateCw, Search } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { Check, ChevronRight, Download, FolderPlus, FolderKanban, Rocket, RotateCw, Search, Undo2 } from "lucide-react";
 import type { AgentTool, ExternalSkillRecord, ProjectSummary, SkillSummary } from "../shared/types";
 import { getTopCategory, groupExternalSkills, groupLibrarySkills, isSkillCompatibleWithTools } from "./projectSkillGroups";
 import { buildDeploySuccessNotice, DeployScopeHints } from "./deployHints";
@@ -20,8 +20,135 @@ const toolLabels: Record<AgentTool, string> = {
 
 type WorkspaceTab = "import" | "deploy";
 
+type DeployChangeSummary = {
+  tone: "unchanged" | "add" | "remove" | "mixed";
+  label: string;
+  detail: string;
+};
+
+type ImportChangeSummary = DeployChangeSummary;
+
+function areIdSetsEqual(a: string[], b: string[]) {
+  if (a.length !== b.length) return false;
+  const setB = new Set(b);
+  return a.every((id) => setB.has(id));
+}
+
+function getRevertLabel(currentCount: number, baselineCount: number, restoreLabel: string) {
+  return currentCount === 0 && baselineCount > 0 ? restoreLabel : "撤销变更";
+}
+
+type WorkspaceCommandBarProps = {
+  ariaLabel: string;
+  stats: Array<{ label: string; value: number }>;
+  idleStatus?: string;
+  changeTone?: DeployChangeSummary["tone"];
+  changeDetail?: string;
+  showRevert?: boolean;
+  revertLabel?: string;
+  onRevert?: () => void;
+  ctaIcon: ReactNode;
+  ctaLabel: string;
+  ctaReady?: boolean;
+  ctaDisabled?: boolean;
+  onCta: () => void;
+};
+
+function WorkspaceCommandBar({
+  ariaLabel,
+  stats,
+  idleStatus,
+  changeTone,
+  changeDetail,
+  showRevert,
+  revertLabel,
+  onRevert,
+  ctaIcon,
+  ctaLabel,
+  ctaReady = false,
+  ctaDisabled = false,
+  onCta,
+}: WorkspaceCommandBarProps) {
+  const hasChange = Boolean(changeDetail);
+
+  return (
+    <div className="project-deploy-sticky">
+      <div className="project-workspace-command">
+        <div className="project-workspace-command-meta" role="status" aria-live="polite" aria-label={ariaLabel}>
+          {stats.map((stat, index) => (
+            <span key={stat.label} className="command-stat-group">
+              {index > 0 && <span className="command-divider" aria-hidden="true" />}
+              <span>{stat.label} <strong>{stat.value}</strong></span>
+            </span>
+          ))}
+          {!hasChange && idleStatus && (
+            <>
+              <span className="command-divider" aria-hidden="true" />
+              <span className="command-status">{idleStatus}</span>
+            </>
+          )}
+          {hasChange && (
+            <>
+              <span className="command-divider" aria-hidden="true" />
+              <span className={`command-status change-${changeTone ?? "unchanged"}`}>{changeDetail}</span>
+              {showRevert && onRevert && revertLabel && (
+                <button type="button" className="command-revert-button" onClick={onRevert}>
+                  <Undo2 size={12} />
+                  {revertLabel}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        <button
+          type="button"
+          className={`workspace-command-cta${ctaReady ? " ready" : ""}`}
+          onClick={onCta}
+          disabled={ctaDisabled}
+        >
+          {ctaIcon}
+          {ctaLabel}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function formatToolList(tools: AgentTool[]) {
   return tools.map((tool) => toolLabels[tool]).join(" · ");
+}
+
+function buildDeployChangeSummary(
+  selectedCount: number,
+  addCount: number,
+  removeCount: number,
+): DeployChangeSummary {
+  if (addCount === 0 && removeCount === 0) {
+    return { tone: "unchanged", label: "部署变更", detail: "无变更" };
+  }
+  if (addCount > 0 && removeCount === 0) {
+    return { tone: "add", label: "点击部署后", detail: `新增 ${addCount} 个 Skill` };
+  }
+  if (addCount === 0 && removeCount > 0) {
+    if (selectedCount === 0) {
+      return { tone: "remove", label: "点击部署后", detail: `清空已部署的 ${removeCount} 个 Skill` };
+    }
+    return { tone: "remove", label: "点击部署后", detail: `移除 ${removeCount} 个 Skill` };
+  }
+  return { tone: "mixed", label: "点击部署后", detail: `新增 ${addCount} 个，移除 ${removeCount} 个` };
+}
+
+function buildImportChangeSummary(
+  selectedCount: number,
+  willSaveCount: number,
+): ImportChangeSummary {
+  if (willSaveCount > 0) {
+    return { tone: "add", label: "点击保存后", detail: `收录 ${willSaveCount} 个 Skill` };
+  }
+  if (selectedCount === 0) {
+    return { tone: "unchanged", label: "收录变更", detail: "请先勾选 Skill" };
+  }
+  return { tone: "unchanged", label: "收录变更", detail: "所选均已收录" };
 }
 
 export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkillIds?: string[] }) {
@@ -29,10 +156,13 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   const [librarySkills, setLibrarySkills] = useState<SkillSummary[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
   const [deploySkillIds, setDeploySkillIds] = useState<string[]>([]);
+  const [boundSkillIds, setBoundSkillIds] = useState<string[]>([]);
+  const pendingLibrarySkillIds = useRef(initialSkillIds);
   const [selectedTools, setSelectedTools] = useState<AgentTool[]>([]);
   const [projectSkills, setProjectSkills] = useState<ExternalSkillRecord[]>([]);
   const [globalSkills, setGlobalSkills] = useState<ExternalSkillRecord[]>([]);
   const [selectedProjectSkillIds, setSelectedProjectSkillIds] = useState<string[]>([]);
+  const [importSelectionBaseline, setImportSelectionBaseline] = useState<string[]>([]);
   const [importedSkillIds, setImportedSkillIds] = useState<string[]>([]);
   const [importingSelected, setImportingSelected] = useState(false);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>("import");
@@ -61,12 +191,12 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
         : nextProjects[0] ?? null,
     );
     setDeploySkillIds((current) =>
-      initialSkillIds.length > 0
-        ? initialSkillIds.filter((id) => nextSkills.some((skill) => skill.id === id))
+      pendingLibrarySkillIds.current.length > 0
+        ? pendingLibrarySkillIds.current.filter((id) => nextSkills.some((skill) => skill.id === id))
         : current.filter((id) => nextSkills.some((skill) => skill.id === id)),
     );
     setLoading(false);
-  }, [initialSkillIds]);
+  }, []);
 
   useEffect(() => {
     refresh().catch((error) => setNotice(error instanceof Error ? error.message : "项目数据读取失败"));
@@ -77,9 +207,11 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   }, []);
 
   const applyDiscoveredSkills = useCallback((skills: ExternalSkillRecord[], globals: ExternalSkillRecord[], project: ProjectSummary) => {
+    const initialSelection = skills.map((item) => item.id);
     setProjectSkills(skills);
     setGlobalSkills(globals);
-    setSelectedProjectSkillIds(skills.map((item) => item.id));
+    setSelectedProjectSkillIds(initialSelection);
+    setImportSelectionBaseline(initialSelection);
     setImportedSkillIds([]);
     setSelectedTools((project.discoveredTools?.length ?? 0) > 0 ? (project.discoveredTools ?? []) : project.tools.length > 0 ? project.tools : ["codex"]);
     setSelectedProject(project);
@@ -110,6 +242,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
       setProjectSkills([]);
       setGlobalSkills([]);
       setSelectedProjectSkillIds([]);
+      setImportSelectionBaseline([]);
       setImportedSkillIds([]);
       return;
     }
@@ -150,9 +283,34 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
   );
 
   useEffect(() => {
-    setDeployGroupsTouched(false);
-    setExpandedDeployGroups([]);
+    if (!selectedProject) {
+      setBoundSkillIds([]);
+      return;
+    }
+    window.skillforge.getProjectBoundSkillIds(selectedProject.id).then((ids) => {
+      setBoundSkillIds(ids);
+      if (pendingLibrarySkillIds.current.length > 0) {
+        setDeploySkillIds(pendingLibrarySkillIds.current);
+        pendingLibrarySkillIds.current = [];
+        setActiveTab("deploy");
+        return;
+      }
+      setDeploySkillIds(ids);
+    }).catch(() => {
+      setBoundSkillIds([]);
+      if (pendingLibrarySkillIds.current.length > 0) {
+        setDeploySkillIds(pendingLibrarySkillIds.current);
+        pendingLibrarySkillIds.current = [];
+        setActiveTab("deploy");
+      }
+    });
   }, [selectedProject?.id]);
+
+  useEffect(() => {
+    if (initialSkillIds.length > 0) {
+      pendingLibrarySkillIds.current = initialSkillIds;
+    }
+  }, [initialSkillIds]);
 
   useEffect(() => {
     if (activeTab === "deploy" && !deployGroupsTouched && deploySkillGroups.length > 0) {
@@ -160,7 +318,54 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     }
   }, [activeTab, deploySkillGroups, deployGroupsTouched]);
 
+  useEffect(() => {
+    setDeployGroupsTouched(false);
+    setExpandedDeployGroups([]);
+  }, [selectedProject?.id]);
+
+  const deployPendingAddCount = useMemo(
+    () => deploySkillIds.filter((id) => !boundSkillIds.includes(id)).length,
+    [deploySkillIds, boundSkillIds],
+  );
+  const deployPendingRemoveCount = useMemo(
+    () => boundSkillIds.filter((id) => !deploySkillIds.includes(id)).length,
+    [deploySkillIds, boundSkillIds],
+  );
+  const deployChangeSummary = useMemo(
+    () => buildDeployChangeSummary(
+      deploySkillIds.length,
+      deployPendingAddCount,
+      deployPendingRemoveCount,
+    ),
+    [deploySkillIds.length, deployPendingAddCount, deployPendingRemoveCount],
+  );
+  const deploySelectionDirty = useMemo(
+    () => deployPendingAddCount > 0 || deployPendingRemoveCount > 0,
+    [deployPendingAddCount, deployPendingRemoveCount],
+  );
   const selectedProjectSkillCount = useMemo(() => selectedProjectSkillIds.length, [selectedProjectSkillIds]);
+  const importWillSaveCount = useMemo(
+    () => selectedProjectSkillIds.filter((id) => !importedSkillIds.includes(id)).length,
+    [selectedProjectSkillIds, importedSkillIds],
+  );
+  const importChangeSummary = useMemo(
+    () => buildImportChangeSummary(selectedProjectSkillCount, importWillSaveCount),
+    [selectedProjectSkillCount, importWillSaveCount],
+  );
+  const importSelectionDirty = useMemo(
+    () => !areIdSetsEqual(selectedProjectSkillIds, importSelectionBaseline),
+    [selectedProjectSkillIds, importSelectionBaseline],
+  );
+  const importChangePreview = useMemo(() => {
+    if (!importSelectionDirty) return null;
+    if (importWillSaveCount > 0) {
+      return { tone: "add" as const, detail: `收录 ${importWillSaveCount} 个 Skill` };
+    }
+    if (selectedProjectSkillCount === 0) {
+      return { tone: "remove" as const, detail: "已取消全部勾选" };
+    }
+    return { tone: "unchanged" as const, detail: "勾选有变更" };
+  }, [importSelectionDirty, importWillSaveCount, selectedProjectSkillCount]);
   const pendingImportCount = useMemo(
     () => [...projectSkills, ...globalSkills].filter((item) => !importedSkillIds.includes(item.id)).length,
     [projectSkills, globalSkills, importedSkillIds],
@@ -189,10 +394,13 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
       setNotice("请至少选择一个目标工具");
       return;
     }
-    if (deploySkillIds.length === 0) {
+    if (deploySkillIds.length === 0 && boundSkillIds.length === 0) {
       setNotice("请先在“从 Skill 库部署”中选择要写入项目的 Skill");
       setActiveTab("deploy");
       return;
+    }
+    if (deploySkillIds.length === 0 && boundSkillIds.length > 0) {
+      if (!window.confirm(`确认清空“${selectedProject.name}”已部署的 ${boundSkillIds.length} 个 Skill 吗？`)) return;
     }
     const result = await window.skillforge.deployProject({
       projectId: selectedProject.id,
@@ -201,6 +409,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     });
     setProjects((current) => current.map((project) => (project.id === result.project.id ? result.project : project)));
     setSelectedProject(result.project);
+    setBoundSkillIds(deploySkillIds);
     setNotice(buildDeploySuccessNotice(result.files.length, result.project.name, selectedTools));
   }
 
@@ -213,6 +422,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
     if (!selectedProject || !window.confirm(`确认清空“${selectedProject.name}”的已部署 Skill 吗？已手动修改的文件会保留。`)) return;
     const result = await window.skillforge.clearProjectSkills(selectedProject.id);
     setSelectedProject(result.project);
+    setBoundSkillIds([]);
     setDeploySkillIds([]);
     setNotice(`已清空部署文件，删除 ${result.removedFiles.length} 个，保留 ${result.preservedFiles.length} 个手动修改文件`);
   }
@@ -252,6 +462,24 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
 
   function toggleDeploySkill(skillId: string) {
     setDeploySkillIds((current) => current.includes(skillId) ? current.filter((id) => id !== skillId) : [...current, skillId]);
+  }
+
+  function handleRevertDeploySelection() {
+    setDeploySkillIds([...boundSkillIds]);
+    setNotice(
+      boundSkillIds.length > 0
+        ? `已恢复为当前已部署的 ${boundSkillIds.length} 个 Skill`
+        : "已撤销部署选择变更",
+    );
+  }
+
+  function handleRevertImportSelection() {
+    setSelectedProjectSkillIds([...importSelectionBaseline]);
+    setNotice(
+      importSelectionBaseline.length > 0
+        ? `已恢复默认勾选的 ${importSelectionBaseline.length} 个 Skill`
+        : "已撤销收录选择变更",
+    );
   }
 
   function toggleVisibleImportSkills() {
@@ -327,6 +555,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
       <div className="project-layout">
         <div className="project-list">
           <div className="panel-title"><FolderKanban size={16} /> 已添加项目 <span>{projects.length}</span></div>
+          <div className="panel-list-scroll">
           {loading ? <div className="panel-empty">读取项目中…</div> : projects.length === 0 ? <div className="panel-empty">还没有添加项目。<br />先选择一个本地项目文件夹。</div> : projects.map((project) => (
             <button key={project.id} className={selectedProject?.id === project.id ? "project-item selected" : "project-item"} onClick={() => setSelectedProject(project)}>
               <div className="project-item-icon">⌂</div>
@@ -338,6 +567,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
               </div>
             </button>
           ))}
+          </div>
         </div>
         <div className="project-detail">
           {!selectedProject ? <div className="project-placeholder"><FolderKanban size={34} /><h3>选择一个项目开始</h3><p>添加本地项目后，会自动识别其中已有的 Skill，并支持从项目收录到 Skill 库。</p></div> : <>
@@ -346,17 +576,17 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                 <span className="eyebrow">项目工作区</span>
                 <h2>{selectedProject.name}</h2>
                 <code>{selectedProject.path}</code>
-                <div className="project-stat-row">
-                  <span>项目 Skill <strong>{projectSkills.length}</strong></span>
-                  <span>待收录 <strong>{pendingImportCount}</strong></span>
-                  <span>已选收录 <strong>{selectedProjectSkillCount}</strong></span>
-                  <span>已选部署 <strong>{deploySkillIds.length}</strong></span>
-                </div>
+                {activeTab === "import" && (
+                  <div className="project-stat-row">
+                    <span>项目 Skill <strong>{projectSkills.length}</strong></span>
+                    <span>待收录 <strong>{pendingImportCount}</strong></span>
+                    <span>已选收录 <strong>{selectedProjectSkillCount}</strong></span>
+                  </div>
+                )}
               </div>
               <div className="project-detail-actions">
                 <button className="ghost-button" onClick={handleScan} disabled={scanning}><RotateCw size={15} /> {scanning ? "扫描中…" : "重新扫描"}</button>
                 <button className="ghost-button danger-ghost" onClick={handleClearBindings}>清空已部署</button>
-                <button className="deploy-button" onClick={handleDeploy}><Rocket size={16} /> 部署到项目</button>
               </div>
             </div>
 
@@ -366,35 +596,53 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
               <DeployScopeHints selectedTools={selectedTools} />
             </div>
 
-            <div className="project-workspace-tabs">
-              <button className={activeTab === "import" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("import")}>
+            <div className="project-workspace-tabs" role="tablist" aria-label="项目 Skill 操作">
+              <button type="button" role="tab" aria-selected={activeTab === "import"} className={activeTab === "import" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("import")}>
                 从项目收录到库
                 <span>{pendingImportCount}</span>
               </button>
-              <button className={activeTab === "deploy" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("deploy")}>
+              <button type="button" role="tab" aria-selected={activeTab === "deploy"} className={activeTab === "deploy" ? "project-tab active" : "project-tab"} onClick={() => setActiveTab("deploy")}>
                 从 Skill 库部署
                 <span>{deploySkillIds.length} / {librarySkills.length}</span>
               </button>
             </div>
 
             {activeTab === "import" ? (
+              <>
+              <WorkspaceCommandBar
+                ariaLabel="收录状态摘要"
+                stats={[
+                  { label: "已收录", value: importedSkillIds.length },
+                  { label: "已勾选", value: selectedProjectSkillCount },
+                ]}
+                idleStatus={importChangeSummary.detail}
+                changeTone={importChangePreview?.tone}
+                changeDetail={importChangePreview?.detail}
+                showRevert={importSelectionDirty}
+                revertLabel={getRevertLabel(selectedProjectSkillCount, importSelectionBaseline.length, "恢复默认勾选")}
+                onRevert={handleRevertImportSelection}
+                ctaIcon={<Download size={16} />}
+                ctaLabel={importingSelected ? "保存中…" : importWillSaveCount > 0 ? `保存 ${importWillSaveCount} 个到库` : "保存到库"}
+                ctaReady={importWillSaveCount > 0}
+                ctaDisabled={importingSelected || importWillSaveCount === 0}
+                onCta={handleImportSelected}
+              />
               <div className="project-workspace-panel">
                 <div className="project-panel-toolbar">
                   <label className="project-search-field">
                     <Search size={14} />
                     <input value={importSearch} onChange={(event) => setImportSearch(event.target.value)} placeholder="搜索项目 Skill 名称、路径或来源…" />
                   </label>
-                  <div className="project-panel-actions">
+                  <div className="project-panel-actions project-panel-actions-secondary">
+                    <span className="project-panel-actions-label">批量</span>
                     <button type="button" className="ghost-button compact-button" onClick={expandAllImportGroups}>全部展开</button>
                     <button type="button" className="ghost-button compact-button" onClick={collapseAllImportGroups}>全部收起</button>
                     <button className="ghost-button compact-button" onClick={toggleVisibleImportSkills} disabled={visibleImportSkillIds.length === 0}>
                       {allVisibleImportSelected ? "取消全选" : "全选"}
                     </button>
-                    <button className="scan-import-all" onClick={handleImportSelected} disabled={importingSelected || selectedProjectSkillCount === 0}>
-                      <Download size={13} /> {importingSelected ? "保存中…" : "将选中项保存到库"}
-                    </button>
                   </div>
                 </div>
+                <p className="project-panel-hint">勾选 Skill 后，使用上方命令栏保存到库；勾选有变更时可撤销。</p>
                 {importSkillGroups.length === 0 ? <div className="scan-empty">{scanning ? "正在识别项目 Skill…" : "没有匹配的项目 Skill。"}</div> : <div className="project-skill-groups">{importSkillGroups.map((group) => {
                   const expanded = expandedImportGroups.includes(group.category);
                   const selectedCount = group.skills.filter((skill) => selectedProjectSkillIds.includes(skill.id)).length;
@@ -413,14 +661,35 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                   </section>;
                 })}</div>}
               </div>
+              </>
             ) : (
+              <>
+              <WorkspaceCommandBar
+                ariaLabel="部署状态摘要"
+                stats={[
+                  { label: "已部署", value: boundSkillIds.length },
+                  { label: "已勾选", value: deploySkillIds.length },
+                ]}
+                idleStatus={deployChangeSummary.detail}
+                changeTone={deploySelectionDirty ? deployChangeSummary.tone : undefined}
+                changeDetail={deploySelectionDirty ? deployChangeSummary.detail : undefined}
+                showRevert={deploySelectionDirty}
+                revertLabel={getRevertLabel(deploySkillIds.length, boundSkillIds.length, "恢复已部署")}
+                onRevert={handleRevertDeploySelection}
+                ctaIcon={<Rocket size={16} />}
+                ctaLabel="部署到项目"
+                ctaReady={deploySelectionDirty}
+                ctaDisabled={!deploySelectionDirty && deploySkillIds.length === 0}
+                onCta={handleDeploy}
+              />
               <div className="project-workspace-panel">
                 <div className="project-panel-toolbar">
                   <label className="project-search-field">
                     <Search size={14} />
                     <input value={deploySearch} onChange={(event) => setDeploySearch(event.target.value)} placeholder="搜索 Skill 名称、描述或分类…" />
                   </label>
-                  <div className="project-panel-actions">
+                  <div className="project-panel-actions project-panel-actions-secondary">
+                    <span className="project-panel-actions-label">批量</span>
                     <label className="project-filter-toggle">
                       <input type="checkbox" checked={onlyCompatible} onChange={(event) => setOnlyCompatible(event.target.checked)} />
                       <span>仅显示当前工具可用</span>
@@ -432,7 +701,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                     </button>
                   </div>
                 </div>
-                <p className="project-panel-hint">勾选后点击右上角“部署到项目”。部署写入项目级 Skill 目录，可在该项目中用斜杠命令调用。</p>
+                <p className="project-panel-hint">勾选 Skill 后，使用上方命令栏部署到项目；勾选有变更时可撤销。</p>
                 {deploySkillGroups.length === 0 ? <div className="scan-empty">没有匹配的 Skill。</div> : <div className="project-skill-groups">{deploySkillGroups.map((group) => {
                   const expanded = expandedDeployGroups.includes(group.category);
                   const selectedCount = group.skills.filter((skill) => deploySkillIds.includes(skill.id)).length;
@@ -454,6 +723,7 @@ export default function ProjectWorkspace({ initialSkillIds = [] }: { initialSkil
                   </section>;
                 })}</div>}
               </div>
+              </>
             )}
           </>}
         </div>

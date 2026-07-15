@@ -3,6 +3,8 @@
 :root {
   --scrollbar-size: 6px;
 
+  /* UI 强调色：组件请使用 --accent / --accent-rgb / --brand-gradient，勿直接引用 --cyan */
+
   --transition-hover: 0.12s ease;
   --transition-select: 0.16s ease;
   --transition-dialog: 0.2s ease;

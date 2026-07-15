@@ -1,7 +1,7 @@
 import { app, dialog, ipcMain } from "electron";
 import fs from "node:fs";
 import path from "node:path";
-import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getSettings, getSkillSourcesDirectory, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkillCategories, listSkillNavigation, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
+import { addProject, backupDatabase, createPreset, createSkill, deletePreset, deleteSkill, exportData, getDatabasePath, getProjectSkillIds, getSettings, getSkillSourcesDirectory, importSkillFromFile, importSkillsFromDirectory, importSkillsFromGit, listPresets, listProjects, listSkillCategories, listSkillNavigation, listSkills, refreshExternalSkill, setSetting, setSkillEnabled, setSkillTags, setSkillsEnabled, setSkillsTags, updatePreset, updateSkill } from "./db";
 import { clearProjectSkills, deployProject } from "./deployment";
 import { importProjectSkill, loadDiscoveredProjectSkills, scanProject } from "./scanner";
 import { applyPresetToProject } from "./presets";
@@ -66,6 +66,7 @@ export function registerIpcHandlers() {
   ipcMain.handle("projects:clear-skills", (_event, projectId: string) => clearProjectSkills(projectId));
   ipcMain.handle("projects:scan", (_event, projectId: string) => scanProject(projectId));
   ipcMain.handle("projects:discovered-skills", (_event, projectId: string) => loadDiscoveredProjectSkills(projectId));
+  ipcMain.handle("projects:bound-skill-ids", (_event, projectId: string) => getProjectSkillIds(projectId));
   ipcMain.handle("projects:import-skill", (_event, input) => importProjectSkill(input));
   ipcMain.handle("presets:list", () => listPresets());
   ipcMain.handle("presets:create", (_event, input: CreatePresetInput) => createPreset(input));

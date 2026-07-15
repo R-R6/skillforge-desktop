@@ -25,6 +25,7 @@ contextBridge.exposeInMainWorld("skillforge", {
   clearProjectSkills: (projectId: string) => ipcRenderer.invoke("projects:clear-skills", projectId) as Promise<ClearProjectResult>,
   scanProject: (projectId: string) => ipcRenderer.invoke("projects:scan", projectId) as Promise<ProjectScanResult>,
   getDiscoveredProjectSkills: (projectId: string) => ipcRenderer.invoke("projects:discovered-skills", projectId) as Promise<ProjectScanResult>,
+  getProjectBoundSkillIds: (projectId: string) => ipcRenderer.invoke("projects:bound-skill-ids", projectId) as Promise<string[]>,
   importExternalSkill: (input: ImportExternalSkillInput) => ipcRenderer.invoke("projects:import-skill", input) as Promise<SkillSummary>,
   listPresets: () => ipcRenderer.invoke("presets:list") as Promise<PresetSummary[]>,
   createPreset: (input: CreatePresetInput) => ipcRenderer.invoke("presets:create", input) as Promise<PresetSummary>,

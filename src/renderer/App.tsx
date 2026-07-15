@@ -128,7 +128,7 @@ function App() {
         </div>
       </aside>
 
-      <main className="main-content">
+      <main className={["projects", "presets", "sync", "skill-library"].includes(activeNav) ? "main-content main-content--split" : "main-content"}>
         <header className="topbar">
           <div>
             <div className="breadcrumb">

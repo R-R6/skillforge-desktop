@@ -108,7 +108,9 @@ export default function PresetWorkspace() {
       <div className="preset-layout">
         <div className="preset-list panel-box">
           <div className="panel-title"><span>我的预设</span><b>{presets.length}</b></div>
+          <div className="panel-list-scroll">
           {presets.length === 0 ? <div className="panel-empty">还没有预设。<br />可以从当前 Skill 库创建一个。</div> : presets.map((preset) => <button key={preset.id} className={selectedPresetId === preset.id ? "preset-item selected" : "preset-item"} onClick={() => setSelectedPresetId(preset.id)}><span className="preset-item-icon">✦</span><span><strong>{preset.name}</strong><small>{preset.skillIds.length} 个 Skill · {preset.tools.length} 个工具</small></span></button>)}
+          </div>
         </div>
         <div className="preset-editor panel-box">
           <div className="preset-editor-head"><div><span className="eyebrow">预设编辑</span><h2>{selectedPresetId ? "编辑预设配置" : "创建新的预设"}</h2></div>{selectedPresetId && <button className="danger-button" onClick={handleDelete}><Trash2 size={14} /> 删除</button>}</div>
