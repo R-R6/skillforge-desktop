@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { Info } from "lucide-react";
 import type { AgentTool } from "../shared/types";
 

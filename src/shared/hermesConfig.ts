@@ -32,12 +32,19 @@ function readHermesHomesFromWindowsEnvironment() {
   return [...homes];
 }
 
-function platformDefaultHermesHome() {
-  const localAppData = process.env.LOCALAPPDATA;
-  if (process.platform === "win32" && localAppData) {
-    return path.join(localAppData, "hermes");
+export function resolveDefaultHermesHome(
+  platform: NodeJS.Platform = process.platform,
+  env: NodeJS.ProcessEnv = process.env,
+  homedir: string = os.homedir(),
+) {
+  if (platform === "win32" && env.LOCALAPPDATA) {
+    return path.join(env.LOCALAPPDATA, "hermes");
   }
-  return path.join(os.homedir(), ".hermes");
+  return path.join(homedir, ".hermes");
+}
+
+function platformDefaultHermesHome() {
+  return resolveDefaultHermesHome();
 }
 
 function normalizeHermesHome(targetPath: string) {
@@ -73,6 +80,8 @@ function discoverHermesDesktopHomesFromRunningProcess() {
 }
 
 function discoverHermesDesktopHomesFromInstallDirs() {
+  if (process.platform !== "win32") return [] as string[];
+
   const homes = new Set<string>();
   const ownerCandidates = new Set<string>();
 
@@ -102,16 +111,26 @@ function discoverHermesDesktopHomesFromInstallDirs() {
   return [...homes];
 }
 
-export function resolveHermesHome() {
-  const fromProcess = process.env.HERMES_HOME?.trim();
+export function resolvePreferredHermesHome(
+  env: NodeJS.ProcessEnv = process.env,
+  platform: NodeJS.Platform = process.platform,
+  homedir: string = os.homedir(),
+) {
+  const fromProcess = env.HERMES_HOME?.trim();
   if (fromProcess) return fromProcess;
 
-  for (const scope of ["User", "Machine", "Process"] as const) {
-    const fromWindows = readWindowsEnvironmentVariable("HERMES_HOME", scope);
-    if (fromWindows) return fromWindows;
+  if (platform === "win32") {
+    for (const scope of ["User", "Machine", "Process"] as const) {
+      const fromWindows = readWindowsEnvironmentVariable("HERMES_HOME", scope);
+      if (fromWindows) return fromWindows;
+    }
   }
 
-  return platformDefaultHermesHome();
+  return resolveDefaultHermesHome(platform, env, homedir);
+}
+
+export function resolveHermesHome() {
+  return resolvePreferredHermesHome();
 }
 
 export function resolveHermesHomes() {
@@ -171,7 +190,7 @@ function parseExternalDirLines(configText: string) {
   for (let index = skillsIndex + 1; index < lines.length; index += 1) {
     const line = lines[index];
     if (/^\S/.test(line) && !/^\s/.test(line)) break;
-    if (/^  external_dirs:/.test(line)) {
+    if (/^ {2}external_dirs:/.test(line)) {
       externalIndex = index;
       break;
     }
@@ -187,9 +206,9 @@ function parseExternalDirLines(configText: string) {
   const entries: string[] = [];
   for (let index = externalIndex + 1; index < lines.length; index += 1) {
     const line = lines[index];
-    if (!/^    - /.test(line)) break;
+    if (!/^ {4}- /.test(line)) break;
     if (line.includes(HERMES_SKILLFORGE_MARKER)) continue;
-    entries.push(line.replace(/^    - /, "").trim());
+    entries.push(line.replace(/^ {4}- /, "").trim());
   }
 
   return { lines, skillsIndex, externalIndex, entries };
@@ -197,7 +216,7 @@ function parseExternalDirLines(configText: string) {
 
 function parsedExternalDirLine(line: string) {
   return {
-    inlineEmpty: /^  external_dirs:\s*\[\]\s*$/.test(line),
+    inlineEmpty: /^ {2}external_dirs:\s*\[\]\s*$/.test(line),
   };
 }
 
@@ -230,7 +249,7 @@ export function upsertHermesExternalDirs(managedDirs: string[], configPath = res
   } else {
     let sectionEnd = parsed.externalIndex + 1;
     if (!parsedExternalDirLine(parsed.lines[parsed.externalIndex]).inlineEmpty) {
-      while (sectionEnd < parsed.lines.length && /^    - /.test(parsed.lines[sectionEnd])) sectionEnd += 1;
+      while (sectionEnd < parsed.lines.length && /^ {4}- /.test(parsed.lines[sectionEnd])) sectionEnd += 1;
     }
     next = [
       ...parsed.lines.slice(0, parsed.externalIndex),

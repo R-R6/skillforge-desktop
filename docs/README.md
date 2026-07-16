@@ -6,7 +6,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [build-and-release.md](./build-and-release.md) | 开发、编译、测试与 Windows 安装包发布 |
+| [build-and-release.md](./build-and-release.md) | 开发、编译、测试、本地打包与 GitHub Actions 发布 |
+| [release-notes/v0.1.0.md](./release-notes/v0.1.0.md) | **v0.1.0 发布说明** — 下载选择、变更摘要、Gatekeeper、验收日志与 Release 正文模板 |
 | [macOS 适配方案](./superpowers/specs/2026-07-15-macos-adaptation-design.md) | 双架构未公证 DMG、运行时适配与 GitHub Release 落地设计 |
 | [theme-system/design-philosophy.md](./theme-system/design-philosophy.md) | **设计宪法** — Dark/Light 双人格、Arctic 完整规范、决策对照表 |
 | [theme-system/vision.md](./theme-system/vision.md) | Theme System 1.0 产品愿景与体系结构 |
@@ -30,3 +31,5 @@
 - 已实现 **Visual System 2.0**（Graphite 石墨灰 + 交互点缀色）
 - 主题能力仍为 **Dark / Light 二元反色切换**，待升级为 Theme Engine
 - Theme System 方案与 design-philosophy 已写入 `theme-system/` 子目录
+- macOS 适配与双架构 Release workflow 已落地；对外发版说明见 [release-notes/v0.1.0.md](./release-notes/v0.1.0.md)
+- 本机已验证 ARM64 DMG；Windows EXE 与 macOS Intel DMG 待首次 `v*` tag 的 GitHub Actions 实跑确认

@@ -29,7 +29,7 @@ AI 编程工具 Skill 管理中心，面向 Codex、Cursor、Claude Code、Herme
 - 外部 Skill 来源刷新回应用内库
 - Preset 创建、编辑、删除，以及一键应用到项目
 - 设置、代理配置、SQLite 备份、JSON 导出和 JSONL 日志
-- Windows 应用图标、窗口菜单和托盘入口
+- Windows / macOS 应用图标、菜单和托盘入口
 
 ## 开发
 
@@ -45,6 +45,12 @@ npm run dev
 npm run rebuild:native
 ```
 
+macOS 如需重新生成 `.icns` 与托盘 Template Image：
+
+```bash
+npm run icons:mac
+```
+
 ## 构建
 
 ```bash
@@ -52,13 +58,47 @@ npm run typecheck
 npm run build
 ```
 
-构建 Windows 安装包：
+构建 Windows 安装包（`npm run package` 保持该语义）：
 
 ```bash
 npm run package
+# 或
+npm run package:win
 ```
 
-安装包输出到 `release/SkillForge Desktop Setup 0.1.0.exe`。
+构建 macOS DMG（需要在对应架构的 Mac 上执行）：
+
+```bash
+npm run package:mac:arm64
+npm run package:mac:x64
+```
+
+安装包输出示例：
+
+- Windows：`release/SkillForge Desktop Setup 0.1.0.exe`
+- macOS Apple Silicon：`release/SkillForge-0.1.0-macos-arm64.dmg`
+- macOS Intel：`release/SkillForge-0.1.0-macos-x64.dmg`
+
+推送 `v*` 版本标签后，GitHub Actions 会自动构建并发布上述三种产物。请按电脑架构选择 macOS 包：
+
+- Apple Silicon（M1 / M2 / M3 / M4 等）：下载 `macos-arm64.dmg`
+- Intel Mac：下载 `macos-x64.dmg`
+
+### macOS 安装说明（未公证）
+
+macOS 包使用 ad-hoc 临时签名，**未**使用 Apple 开发者证书，也**未**公证。这不代表应用已通过 Apple 认证。
+
+1. 打开 DMG，将 `SkillForge Desktop.app` 拖到“应用程序”。
+2. 优先在 Finder 中右键（或 Control 单击）应用，选择“打开”。
+3. 若仍被 Gatekeeper 拦截，再执行：
+
+```bash
+xattr -dr com.apple.quarantine "/Applications/SkillForge Desktop.app"
+```
+
+默认不需要 `sudo`。更多本地构建、CI 发布与验证细节见 [`docs/build-and-release.md`](docs/build-and-release.md)。
+
+首次在线发布前，请确认 `package.json` 版本号与 `v*` tag 一致，并已在 GitHub Actions 中验证三个平台产物均成功上传。
 
 代码检查：
 

@@ -33,6 +33,41 @@ html, body, #root { height: 100%; overflow: hidden; }
 body.platform-win32.platform-win32-overlay .app-shell { padding-top: 36px; }
 body.platform-darwin .app-shell { padding-top: 28px; }
 
+/*
+ * macOS hiddenInset：必须声明拖拽区域，才能拖动窗口并支持双击标题栏缩放。
+ * 顶部固定拖拽带避开交通灯；页面 topbar 也保留 drag。
+ */
+.mac-titlebar-drag-region { display: none; }
+
+body.platform-darwin .mac-titlebar-drag-region {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 72px;
+  right: 0;
+  height: 28px;
+  z-index: 5000;
+  -webkit-app-region: drag;
+}
+
+body.platform-darwin .topbar {
+  -webkit-app-region: drag;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body.platform-darwin .topbar button,
+body.platform-darwin .topbar input,
+body.platform-darwin .topbar select,
+body.platform-darwin .topbar textarea,
+body.platform-darwin .topbar a,
+body.platform-darwin .topbar-actions,
+body.platform-darwin .nav-item {
+  -webkit-app-region: no-drag;
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
 button, input { font: inherit; }
 button { border: 0; cursor: pointer; }
 

@@ -98,6 +98,7 @@ function App() {
 
   return (
     <div className="app-shell">
+      <div className="mac-titlebar-drag-region" aria-hidden="true" />
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark" aria-hidden="true"><span className="brand-mark-letter">SF</span></div>

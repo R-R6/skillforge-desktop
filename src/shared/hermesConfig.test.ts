@@ -5,8 +5,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   collectHermesExternalDirs,
   HERMES_SKILLFORGE_MARKER,
+  resolveDefaultHermesHome,
   resolveHermesConfigPath,
   resolveHermesHome,
+  resolvePreferredHermesHome,
   upsertHermesExternalDirs,
 } from "./hermesConfig";
 import type { ProjectSummary } from "./types";
@@ -52,6 +54,23 @@ describe("resolveHermesHome", () => {
     process.env.HERMES_HOME = "F:/custom/hermes";
     expect(resolveHermesHome()).toBe("F:/custom/hermes");
     expect(resolveHermesConfigPath()).toBe(path.join("F:/custom/hermes", "config.yaml"));
+  });
+
+  it("uses ~/.hermes as the macOS default home", () => {
+    expect(resolveDefaultHermesHome("darwin", {}, "/Users/demo")).toBe(path.join("/Users/demo", ".hermes"));
+    expect(resolvePreferredHermesHome({}, "darwin", "/Users/demo")).toBe(path.join("/Users/demo", ".hermes"));
+  });
+
+  it("prefers HERMES_HOME on macOS before the default home", () => {
+    expect(resolvePreferredHermesHome({ HERMES_HOME: "/tmp/custom-hermes" }, "darwin", "/Users/demo")).toBe(
+      "/tmp/custom-hermes",
+    );
+  });
+
+  it("uses LOCALAPPDATA\\hermes as the Windows default home", () => {
+    expect(
+      resolveDefaultHermesHome("win32", { LOCALAPPDATA: "C:/Users/demo/AppData/Local" }, "C:/Users/demo"),
+    ).toBe(path.join("C:/Users/demo/AppData/Local", "hermes"));
   });
 });
 

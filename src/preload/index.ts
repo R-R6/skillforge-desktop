@@ -1,6 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { AppInfo, ApplyPresetInput, ClearProjectResult, CreatePresetInput, CreateSkillInput, DeployProjectInput, DeploymentResult, FileExportResult, ImportExternalSkillInput, PresetSummary, ProjectScanResult, ProjectSummary, SettingsMap, SkillCategoryCount, SkillNavigationSnapshot, SkillQuery, SkillSummary, UpdatePresetInput, UpdateSkillInput } from "../shared/types";
-import type { ThemeSelection } from "../shared/theme";
 import type { ThemePack, ThemePackSummary } from "../shared/themePack";
 
 contextBridge.exposeInMainWorld("skillforge", {

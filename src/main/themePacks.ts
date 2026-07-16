@@ -23,7 +23,7 @@ function getUserThemesDirectory() {
   return directory;
 }
 
-function readPackFromFile(filePath: string, source: "builtin" | "user"): ThemePack | null {
+function readPackFromFile(filePath: string): ThemePack | null {
   try {
     const json = fs.readFileSync(filePath, "utf8");
     const pack = parseThemePackJson(json);
@@ -37,7 +37,7 @@ function listPacksInDirectory(directory: string, source: "builtin" | "user"): Th
   if (!fs.existsSync(directory)) return [];
   return fs.readdirSync(directory)
     .filter((fileName) => fileName.endsWith(".json"))
-    .map((fileName) => readPackFromFile(path.join(directory, fileName), source))
+    .map((fileName) => readPackFromFile(path.join(directory, fileName)))
     .filter((pack): pack is ThemePack => pack !== null)
     .map((pack) => summarizeThemePack(pack, source))
     .sort((left, right) => left.name.localeCompare(right.name, "zh-CN"));
@@ -57,7 +57,7 @@ export function getThemePack(key: string): ThemePack | null {
   const directory = parsed.source === "builtin" ? getBuiltinThemesDirectory() : getUserThemesDirectory();
   const filePath = path.join(directory, `${parsed.id}.json`);
   if (!fs.existsSync(filePath)) return null;
-  return readPackFromFile(filePath, parsed.source);
+  return readPackFromFile(filePath);
 }
 
 export function importThemePackFromJson(json: string): ThemePackSummary {

@@ -1,7 +1,7 @@
 {
   "name": "skillforge-desktop",
   "version": "0.1.0",
-  "description": "AI coding agent Skill management center for Windows.",
+  "description": "AI coding agent Skill management center for Windows and macOS.",
   "author": "R-R6",
   "main": "out/main/index.js",
   "private": true,
@@ -16,7 +16,11 @@
     "lint": "eslint .",
     "import:skills": "node scripts/import-jwh-skills.mjs",
     "rebuild:native": "electron-rebuild -f -w better-sqlite3",
-    "package": "npm run build && electron-builder"
+    "icons:mac": "bash scripts/generate-mac-icons.sh",
+    "package": "npm run build && electron-builder --win nsis",
+    "package:win": "npm run build && electron-builder --win nsis",
+    "package:mac:arm64": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dmg --arm64",
+    "package:mac:x64": "npm run build && CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --mac dmg --x64"
   },
   "dependencies": {
     "better-sqlite3": "^11.10.0",
@@ -55,9 +59,49 @@
       "out/**/*",
       "resources/**/*"
     ],
+    "extraResources": [
+      {
+        "from": "resources/trayTemplate.png",
+        "to": "trayTemplate.png"
+      },
+      {
+        "from": "resources/trayTemplate@2x.png",
+        "to": "trayTemplate@2x.png"
+      },
+      {
+        "from": "resources/icon.png",
+        "to": "icon.png"
+      }
+    ],
     "asarUnpack": [
       "node_modules/better-sqlite3/**/*"
     ],
+    "afterPack": "scripts/after-pack-mac.cjs",
+    "mac": {
+      "target": [
+        "dmg"
+      ],
+      "icon": "resources/icon.icns",
+      "category": "public.app-category.developer-tools",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "artifactName": "SkillForge-${version}-macos-${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ]
+    },
     "win": {
       "target": "nsis",
       "icon": "resources/icon.ico"

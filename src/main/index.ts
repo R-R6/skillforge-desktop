@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu, Tray } from "electron";
+import { app, BrowserWindow, Menu, Tray, nativeImage } from "electron";
 import fs from "node:fs";
 import path from "node:path";
 import { applyBootstrapPaths } from "./bootstrap";
@@ -25,6 +25,16 @@ function getAssetPath(fileName: string) {
   return path.join(app.getAppPath(), "resources", fileName);
 }
 
+function showMainWindow() {
+  if (!mainWindow || mainWindow.isDestroyed()) {
+    createWindow();
+    return;
+  }
+  if (mainWindow.isMinimized()) mainWindow.restore();
+  mainWindow.show();
+  mainWindow.focus();
+}
+
 function configureApplicationMenu() {
   if (process.platform === "darwin") {
     Menu.setApplicationMenu(
@@ -34,16 +44,36 @@ function configureApplicationMenu() {
           submenu: [
             { role: "about" },
             { type: "separator" },
-            { role: "quit", label: "退出 SkillForge" },
+            { role: "services" },
+            { type: "separator" },
+            { role: "hide" },
+            { role: "hideOthers" },
+            { role: "unhide" },
+            { type: "separator" },
+            { role: "quit" },
           ],
         },
         {
           label: "编辑",
-          submenu: [{ role: "copy" }, { role: "paste" }, { role: "selectAll" }],
+          submenu: [
+            { role: "undo" },
+            { role: "redo" },
+            { type: "separator" },
+            { role: "cut" },
+            { role: "copy" },
+            { role: "paste" },
+            { role: "selectAll" },
+          ],
         },
         {
           label: "窗口",
-          submenu: [{ role: "minimize" }, { role: "zoom" }, { role: "front" }],
+          submenu: [
+            { role: "close" },
+            { role: "minimize" },
+            { role: "zoom" },
+            { type: "separator" },
+            { role: "front" },
+          ],
         },
       ]),
     );
@@ -65,7 +95,12 @@ function createWindow() {
     backgroundColor: getInitialWindowBackgroundColor(),
     icon: getAssetPath("icon.png"),
     autoHideMenuBar: true,
-    ...(isMac ? { titleBarStyle: "hiddenInset" as const } : {}),
+    ...(isMac
+      ? {
+          titleBarStyle: "hiddenInset" as const,
+          trafficLightPosition: { x: 14, y: 14 },
+        }
+      : {}),
     ...(isWin ? { titleBarOverlay: getInitialTitleBarOverlay() } : {}),
     webPreferences: {
       preload: path.join(__dirname, "../preload/index.cjs"),
@@ -95,18 +130,32 @@ function createWindow() {
 }
 
 function createTray() {
-  const iconPath = getAssetPath("icon.png");
+  const isMac = process.platform === "darwin";
+  const iconPath = isMac ? getAssetPath("trayTemplate.png") : getAssetPath("icon.png");
   if (!fs.existsSync(iconPath)) return;
-  tray = new Tray(iconPath);
+
+  if (isMac) {
+    const trayImage = nativeImage.createFromPath(iconPath);
+    trayImage.setTemplateImage(true);
+    tray = new Tray(trayImage);
+  } else {
+    tray = new Tray(iconPath);
+  }
+
   tray.setToolTip("SkillForge Desktop");
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: "打开 SkillForge", click: () => mainWindow?.show() },
+      { label: "打开 SkillForge", click: () => showMainWindow() },
       { type: "separator" },
       { label: "退出", click: () => app.quit() },
     ]),
   );
-  tray.on("double-click", () => mainWindow?.show());
+
+  if (isMac) {
+    tray.on("click", () => showMainWindow());
+  } else {
+    tray.on("double-click", () => showMainWindow());
+  }
 }
 
 app.whenReady().then(() => {
@@ -120,7 +169,7 @@ app.whenReady().then(() => {
   createTray();
 
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow();
+    showMainWindow();
   });
 });
 
