@@ -6,6 +6,7 @@
 
 | 文档 | 说明 |
 |------|------|
+| [open-source-readiness-2026-07-16.md](./open-source-readiness-2026-07-16.md) | **开源就绪评估** — 是否开源 / Alpha 发布口径、竞品、合规 P0、捐赠建议 |
 | [build-and-release.md](./build-and-release.md) | 开发、编译、测试、本地打包与 GitHub Actions 发布 |
 | [release-notes/v0.1.0.md](./release-notes/v0.1.0.md) | **v0.1.0 发布说明** — 下载选择、变更摘要、Gatekeeper、验收日志与 Release 正文模板 |
 | [macOS 适配方案](./superpowers/specs/2026-07-15-macos-adaptation-design.md) | 双架构未公证 DMG、运行时适配与 GitHub Release 落地设计 |
@@ -33,3 +34,4 @@
 - Theme System 方案与 design-philosophy 已写入 `theme-system/` 子目录
 - macOS 适配与双架构 Release workflow 已落地；对外发版说明见 [release-notes/v0.1.0.md](./release-notes/v0.1.0.md)
 - 本机已验证 ARM64 DMG；Windows EXE 与 macOS Intel DMG 待首次 `v*` tag 的 GitHub Actions 实跑确认
+- **开源判断（2026-07-16）**：产品可用、值得开源；当前适合 v0.1.0 Alpha，须先完成许可证与内置 Skill 合规等 P0。详见 [open-source-readiness-2026-07-16.md](./open-source-readiness-2026-07-16.md)
