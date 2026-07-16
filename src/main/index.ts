@@ -25,6 +25,14 @@ function getAssetPath(fileName: string) {
   return path.join(app.getAppPath(), "resources", fileName);
 }
 
+/** macOS Dock 图标来自 .app 包；dev 跑的是 Electron.app，需运行时覆盖。 */
+function applyMacDockIcon() {
+  if (process.platform !== "darwin" || !app.dock) return;
+  const iconPath = getAssetPath("icon.png");
+  if (!fs.existsSync(iconPath)) return;
+  app.dock.setIcon(nativeImage.createFromPath(iconPath));
+}
+
 function showMainWindow() {
   if (!mainWindow || mainWindow.isDestroyed()) {
     createWindow();
@@ -160,6 +168,7 @@ function createTray() {
 
 app.whenReady().then(() => {
   configureApplicationMenu();
+  applyMacDockIcon();
   initializeDatabase();
   registerIpcHandlers();
   setMainWindowGetter(() => mainWindow);
@@ -178,6 +187,8 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", () => {
+  // Avoid a one-frame flash of Electron.app's stock dock icon while quitting.
+  if (process.platform === "darwin" && app.dock) app.dock.hide();
   logInfo("app_stopping");
   tray?.destroy();
   closeDatabase();

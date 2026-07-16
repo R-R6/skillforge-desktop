@@ -7,9 +7,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "electron-vite dev",
+    "dev": "node scripts/patch-electron-dock-icon.mjs && electron-vite dev",
     "build": "electron-vite build",
     "preview": "electron-vite preview",
+    "postinstall": "node scripts/patch-electron-dock-icon.mjs",
     "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json",
     "test": "vitest run",
     "test:watch": "vitest",
