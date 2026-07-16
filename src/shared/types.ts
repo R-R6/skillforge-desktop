@@ -136,6 +136,7 @@ export interface AppInfo {
 
 export type {
   CleanUnusedClonesResult,
+  DataDirectoryMigrationResult,
   GitImportPreview,
   OnboardingState,
   SkillSourceCloneSummary,

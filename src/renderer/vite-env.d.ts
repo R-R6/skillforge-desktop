@@ -7,6 +7,7 @@ import type {
   ClearProjectResult,
   CreatePresetInput,
   CreateSkillInput,
+  DataDirectoryMigrationResult,
   DeployProjectInput,
   DeploymentResult,
   FileExportResult,
@@ -77,6 +78,9 @@ declare global {
       chooseSkillSourcesDirectory: () => Promise<string | null>;
       setSkillSourcesDirectory: (directoryPath: string) => Promise<string>;
       requestDataDirectoryChange: (directoryPath: string) => Promise<{ requiresRestart: boolean; targetPath: string }>;
+      migrateDataDirectory: (directoryPath: string) => Promise<DataDirectoryMigrationResult | null>;
+      cleanPreviousDataDirectory: () => Promise<{ removedPath: string; freedBytes: number } | null>;
+      dismissPreviousDataDirectory: () => Promise<StorageSummary>;
       restartApp: () => Promise<void>;
       backupDatabase: () => Promise<FileExportResult | null>;
       exportData: () => Promise<FileExportResult | null>;

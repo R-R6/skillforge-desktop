@@ -282,9 +282,11 @@ export default function CategorySidebar({
                   return (
                     <div key={group.kind} className="category-kind-group">
                       <div className="category-kind-label">
-                        <span>{group.label}</span>
-                        <small>{group.hint}</small>
-                        <span className="category-kind-count">{groupCount}</span>
+                        <div className="category-kind-label-head">
+                          <span className="category-kind-title">{group.label}</span>
+                          <span className="category-kind-count">{groupCount}</span>
+                        </div>
+                        <p className="category-kind-hint">{group.hint}</p>
                       </div>
                       {sources.map((source) => (
                         <button

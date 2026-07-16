@@ -8,12 +8,15 @@ export interface BootstrapConfig {
   version: 1;
   dataDirectory: string | null;
   onboardingCompleted: boolean;
+  /** Previous userData path after a migration; kept for optional cleanup. */
+  previousDataDirectory: string | null;
 }
 
 const DEFAULT_BOOTSTRAP: BootstrapConfig = {
   version: 1,
   dataDirectory: null,
   onboardingCompleted: false,
+  previousDataDirectory: null,
 };
 
 export function getBootstrapDirectory(): string {
@@ -49,7 +52,12 @@ export function readBootstrapConfig(): BootstrapConfig {
   if (!fs.existsSync(filePath)) {
     const existingDb = path.join(getDefaultElectronUserDataPath(), "skillforge.db");
     if (fs.existsSync(existingDb)) {
-      const migrated: BootstrapConfig = { version: 1, dataDirectory: null, onboardingCompleted: true };
+      const migrated: BootstrapConfig = {
+        version: 1,
+        dataDirectory: null,
+        onboardingCompleted: true,
+        previousDataDirectory: null,
+      };
       writeBootstrapConfig(migrated);
       return migrated;
     }
@@ -61,6 +69,9 @@ export function readBootstrapConfig(): BootstrapConfig {
       version: 1,
       dataDirectory: typeof parsed.dataDirectory === "string" && parsed.dataDirectory.trim() ? path.resolve(parsed.dataDirectory.trim()) : null,
       onboardingCompleted: parsed.onboardingCompleted === true,
+      previousDataDirectory: typeof parsed.previousDataDirectory === "string" && parsed.previousDataDirectory.trim()
+        ? path.resolve(parsed.previousDataDirectory.trim())
+        : null,
     };
   } catch {
     return { ...DEFAULT_BOOTSTRAP };
@@ -90,6 +101,7 @@ export function completeOnboarding(options?: { dataDirectory?: string | null }):
     dataDirectory: options?.dataDirectory
       ? path.resolve(options.dataDirectory)
       : current.dataDirectory,
+    previousDataDirectory: current.previousDataDirectory,
   };
   writeBootstrapConfig(next);
   if (next.dataDirectory) {
@@ -99,13 +111,26 @@ export function completeOnboarding(options?: { dataDirectory?: string | null }):
   return next;
 }
 
-export function setBootstrapDataDirectory(dataDirectory: string): BootstrapConfig {
+export function setBootstrapDataDirectory(
+  dataDirectory: string,
+  options?: { previousDataDirectory?: string | null },
+): BootstrapConfig {
   const current = readBootstrapConfig();
   const next: BootstrapConfig = {
     ...current,
     dataDirectory: path.resolve(dataDirectory),
     onboardingCompleted: true,
+    previousDataDirectory: options?.previousDataDirectory !== undefined
+      ? (options.previousDataDirectory ? path.resolve(options.previousDataDirectory) : null)
+      : current.previousDataDirectory,
   };
+  writeBootstrapConfig(next);
+  return next;
+}
+
+export function clearPreviousDataDirectory(): BootstrapConfig {
+  const current = readBootstrapConfig();
+  const next: BootstrapConfig = { ...current, previousDataDirectory: null };
   writeBootstrapConfig(next);
   return next;
 }
