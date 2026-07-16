@@ -184,7 +184,10 @@ export default function AppearanceWorkspace() {
               >
                 <ThemePreviewMock selection={option.id} />
                 <span className="appearance-theme-card-copy">
-                  <strong>{option.label}</strong>
+                  <strong className="appearance-theme-card-title">
+                    {option.label}
+                    {option.id === "arctic" && <span className="appearance-theme-default-badge">默认</span>}
+                  </strong>
                   <small>{option.description}</small>
                 </span>
               </button>

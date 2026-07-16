@@ -35,11 +35,19 @@ function getTitleBarSymbolColor(resolvedThemeId: ResolvedThemeId): string {
 }
 
 export function getInitialTitleBarOverlay() {
+  const preferences = parseThemePreferences(getSettings());
+  const resolvedThemeId = resolveThemeId(preferences.themeSelection, nativeTheme.shouldUseDarkColors);
   return {
-    color: getWindowBackgroundColor("graphite-dark"),
-    symbolColor: getTitleBarSymbolColor("graphite-dark"),
+    color: getWindowBackgroundColor(resolvedThemeId),
+    symbolColor: getTitleBarSymbolColor(resolvedThemeId),
     height: TITLE_BAR_HEIGHT,
   };
+}
+
+export function getInitialWindowBackgroundColor(): string {
+  const preferences = parseThemePreferences(getSettings());
+  const resolvedThemeId = resolveThemeId(preferences.themeSelection, nativeTheme.shouldUseDarkColors);
+  return getWindowBackgroundColor(resolvedThemeId);
 }
 
 let mainWindowGetter: () => BrowserWindow | null = () => null;

@@ -14,7 +14,7 @@ export interface ThemePreferences {
 }
 
 export const DEFAULT_THEME_PREFERENCES: ThemePreferences = {
-  themeSelection: "graphite",
+  themeSelection: "arctic",
   accent: "ocean",
   density: "comfortable",
   motion: "default",
@@ -131,14 +131,14 @@ export const THEME_SELECTION_OPTIONS: Array<{ id: ThemeSelection; label: string;
   {
     id: "graphite",
     label: "Graphite Dark",
-    description: "默认品牌主题 · 深夜 AI 实验室",
+    description: "品牌深色主题 · 深夜 AI 实验室",
     help: "石墨灰基底 + 柔和层级，品牌色仅点缀交互元素，适合夜间长时间使用。",
   },
   {
     id: "arctic",
     label: "Arctic Light",
-    description: "明亮精确 · 白天设计工作室",
-    help: "高可读浅色主题，强调干净留白与精确边界，适合白天审阅与演示。",
+    description: "明亮精确 · 白天设计工作室 · 应用默认浅色",
+    help: "SkillForge 的默认主题。高可读浅色界面，强调干净留白与精确边界，适合白天审阅与演示；首次打开即为浅色。",
   },
   {
     id: "midnight",

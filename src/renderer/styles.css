@@ -952,15 +952,13 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 
 .project-deploy-sticky {
   position: sticky;
-  top: 0;
+  top: 10px;
   z-index: 5;
   margin-top: 14px;
-  padding: 0 4px 10px;
-  background: color-mix(in srgb, var(--surface) 90%, transparent);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid color-mix(in srgb, var(--line) 72%, transparent);
-  box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.55);
+  padding: 0 0 12px;
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
 }
 
 .project-workspace-command {
@@ -969,10 +967,15 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--surface-hover) 88%, var(--surface));
+  padding: 11px 14px;
+  border: 1px solid color-mix(in srgb, var(--line-strong) 100%, transparent);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--surface-elevated) 96%, var(--surface));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow:
+    0 12px 28px -18px rgba(0, 0, 0, 0.62),
+    0 2px 6px rgba(0, 0, 0, 0.24);
 }
 
 .project-workspace-command-meta {
@@ -1095,8 +1098,8 @@ kbd { padding: 3px 5px; color: var(--text-disabled); border: 1px solid var(--lin
 }
 
 html[data-theme="arctic-light"] .project-deploy-sticky {
-  background: color-mix(in srgb, var(--surface) 94%, transparent);
-  box-shadow: 0 12px 24px -20px rgba(15, 23, 42, 0.16);
+  background: transparent;
+  box-shadow: none;
 }
 
 .project-deploy-stats {
@@ -1702,7 +1705,20 @@ html[data-theme="arctic-light"] .project-tab.active span {
 .appearance-theme-card:hover { border-color: var(--line-strong); background: var(--surface-elevated); }
 .appearance-theme-card.selected { border-color: var(--border-selected); background: var(--surface-selected); box-shadow: var(--glow-skill-selected); }
 .appearance-theme-card-copy { display: grid; gap: 2px; padding: 0 2px 2px; }
-.appearance-theme-card-copy strong { color: var(--text-primary); font-size: 12px; font-weight: 600; }
+.appearance-theme-card-title { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; color: var(--text-primary); font-size: 12px; font-weight: 600; }
+.appearance-theme-default-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  color: var(--accent);
+  border: 1px solid rgba(var(--accent-rgb), 0.24);
+  border-radius: 999px;
+  background: rgba(var(--accent-rgb), 0.08);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
 .appearance-theme-card-copy small { color: var(--text-disabled); font-size: 10px; font-weight: 400; line-height: 1.4; }
 
 .appearance-pack-toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }

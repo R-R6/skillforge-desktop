@@ -5,7 +5,14 @@ import { applyBootstrapPaths } from "./bootstrap";
 import { closeDatabase, initializeDatabase } from "./db";
 import { registerIpcHandlers } from "./ipc";
 import { logError, logInfo } from "./logger";
-import { applyWindowBackground, getInitialTitleBarOverlay, initializeThemeBridge, isTitleBarOverlayEnabled, setMainWindowGetter } from "./theme";
+import {
+  applyWindowBackground,
+  getInitialTitleBarOverlay,
+  getInitialWindowBackgroundColor,
+  initializeThemeBridge,
+  isTitleBarOverlayEnabled,
+  setMainWindowGetter,
+} from "./theme";
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -55,7 +62,7 @@ function createWindow() {
     minWidth: 1080,
     minHeight: 680,
     title: "SkillForge",
-    backgroundColor: "#13161c",
+    backgroundColor: getInitialWindowBackgroundColor(),
     icon: getAssetPath("icon.png"),
     autoHideMenuBar: true,
     ...(isMac ? { titleBarStyle: "hiddenInset" as const } : {}),
