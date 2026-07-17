@@ -5,8 +5,8 @@ import { getTopCategory, groupExternalSkills, groupLibrarySkills, isSkillCompati
 import { buildDeploySuccessNotice, DeployScopeHints } from "./deployHints";
 
 const toolOptions: Array<{ id: AgentTool; label: string; description: string }> = [
-  { id: "codex", label: "Codex", description: ".codex/skills（项目级）" },
-  { id: "cursor", label: "Cursor", description: ".cursor/skills（项目级）" },
+  { id: "codex", label: "Codex", description: ".codex/skills（项目级，新会话或重启）" },
+  { id: "cursor", label: "Cursor", description: ".cursor/skills（项目级，新对话即可）" },
   { id: "claude-code", label: "Claude Code", description: ".claude/skills（项目级，桌面端需重启）" },
   { id: "hermes", label: "Hermes", description: ".agents/skills（项目级，Desktop 需重启）" },
 ];

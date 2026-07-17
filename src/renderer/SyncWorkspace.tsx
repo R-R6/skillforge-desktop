@@ -8,8 +8,8 @@ interface SyncWorkspaceProps {
 }
 
 const tools: Array<{ id: AgentTool; label: string; entry: string; path: string; note?: string }> = [
-  { id: "codex", label: "Codex", entry: "AGENTS.md", path: ".codex/skills（项目级）" },
-  { id: "cursor", label: "Cursor", entry: ".cursor/rules/skillforge-skills.mdc", path: ".cursor/skills（项目级）" },
+  { id: "codex", label: "Codex", entry: "AGENTS.md", path: ".codex/skills（项目级）", note: "新会话或重启" },
+  { id: "cursor", label: "Cursor", entry: ".cursor/rules/skillforge-skills.mdc", path: ".cursor/skills（项目级）", note: "新对话即可" },
   { id: "claude-code", label: "Claude Code", entry: "CLAUDE.md", path: ".claude/skills（项目级）", note: "桌面端需重启" },
   { id: "hermes", label: "Hermes", entry: "HERMES.md", path: ".agents/skills（项目级）", note: "Desktop 需重启" },
 ];

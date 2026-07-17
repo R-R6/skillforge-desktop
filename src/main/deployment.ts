@@ -5,8 +5,10 @@ import {
   filterSkillsForTool,
   nativeSkillDirectory,
   nativeSkillFilePath,
+  resolveSkillSlugs,
   safeFileName,
   SKILLFORGE_MANAGED_MARKER,
+  formatSlashCommandLabel,
   toAgentSkillMarkdown,
   toSkillSlug,
 } from "../shared/skillDeploy";
@@ -73,9 +75,35 @@ function writeSkillFiles(projectPath: string, skills: SkillSummary[]) {
   return files;
 }
 
-function writeToolEntry(projectPath: string, tool: AgentTool, skills: SkillSummary[]) {
+function collectExistingManagedSlugs(projectPath: string, tool: AgentTool) {
+  const root = path.join(projectPath, AGENT_TOOL_SKILL_DIRS[tool]);
+  const preserved = new Map<string, string>();
+  if (!fs.existsSync(root)) return preserved;
+
+  for (const entry of fs.readdirSync(root, { withFileTypes: true })) {
+    if (!entry.isDirectory()) continue;
+    const markerPath = path.join(root, entry.name, SKILLFORGE_MANAGED_MARKER);
+    if (!fs.existsSync(markerPath)) continue;
+    const skillId = fs.readFileSync(markerPath, "utf8").trim().split(/\r?\n/, 1)[0]?.trim();
+    if (!skillId || preserved.has(skillId)) continue;
+    preserved.set(skillId, entry.name);
+  }
+  return preserved;
+}
+
+function resolveSlugsForTool(projectPath: string, tool: AgentTool, skills: SkillSummary[]) {
   const compatibleSkills = filterSkillsForTool(skills, tool);
-  const slashSkills = compatibleSkills.map((skill) => `- /${toSkillSlug(skill)}`).join("\n");
+  const slugs = resolveSkillSlugs(compatibleSkills, {
+    preserved: collectExistingManagedSlugs(projectPath, tool),
+  });
+  return { compatibleSkills, slugs };
+}
+
+function writeToolEntry(projectPath: string, tool: AgentTool, skills: SkillSummary[]) {
+  const { compatibleSkills, slugs } = resolveSlugsForTool(projectPath, tool, skills);
+  const slashSkills = compatibleSkills
+    .map((skill) => `- ${formatSlashCommandLabel(skill, slugs.get(skill.id))}`)
+    .join("\n");
   const references = compatibleSkills.map((skill) => `- ${mySkillsAtReference(`${safeFileName(skill.name)}.md`)}`).join("\n");
   const body = [
     "## SkillForge Desktop",
@@ -115,24 +143,23 @@ function cleanupNativeSkills(projectPath: string, tool: AgentTool, keepSlugs: Se
   }
 }
 
-function writeNativeSkill(projectPath: string, tool: AgentTool, skill: SkillSummary) {
-  const slug = toSkillSlug(skill);
+function writeNativeSkill(projectPath: string, tool: AgentTool, skill: SkillSummary, slug: string) {
   const skillDir = nativeSkillDirectory(projectPath, tool, slug);
   fs.mkdirSync(skillDir, { recursive: true });
-  fs.writeFileSync(nativeSkillFilePath(projectPath, tool, slug), toAgentSkillMarkdown(skill), "utf8");
+  fs.writeFileSync(nativeSkillFilePath(projectPath, tool, slug), toAgentSkillMarkdown(skill, slug), "utf8");
   fs.writeFileSync(path.join(skillDir, SKILLFORGE_MANAGED_MARKER), `${skill.id}\n`, "utf8");
   return nativeSkillFilePath(projectPath, tool, slug);
 }
 
 function writeNativeSkills(projectPath: string, tool: AgentTool, skills: SkillSummary[]) {
-  const compatibleSkills = filterSkillsForTool(skills, tool);
+  const { compatibleSkills, slugs } = resolveSlugsForTool(projectPath, tool, skills);
   const keepSlugs = new Set<string>();
   const files: string[] = [];
 
   for (const skill of compatibleSkills) {
-    const slug = toSkillSlug(skill);
+    const slug = slugs.get(skill.id) ?? toSkillSlug(skill);
     keepSlugs.add(slug);
-    files.push(writeNativeSkill(projectPath, tool, skill));
+    files.push(writeNativeSkill(projectPath, tool, skill, slug));
   }
 
   cleanupNativeSkills(projectPath, tool, keepSlugs);

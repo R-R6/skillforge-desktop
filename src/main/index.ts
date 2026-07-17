@@ -16,6 +16,7 @@ import {
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
+let macDockHiddenForQuit = false;
 
 applyBootstrapPaths();
 
@@ -186,9 +187,17 @@ app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
 });
 
-app.on("before-quit", () => {
-  // Avoid a one-frame flash of Electron.app's stock dock icon while quitting.
-  if (process.platform === "darwin" && app.dock) app.dock.hide();
+app.on("before-quit", (event) => {
+  // Hide the Dock tile before process teardown clears dock.setIcon(), otherwise
+  // macOS briefly falls back to Electron.app's cached stock icon (esp. Dock Quit).
+  if (process.platform === "darwin" && app.dock && !macDockHiddenForQuit) {
+    event.preventDefault();
+    macDockHiddenForQuit = true;
+    app.dock.hide();
+    setTimeout(() => app.quit(), 120);
+    return;
+  }
+
   logInfo("app_stopping");
   tray?.destroy();
   closeDatabase();
